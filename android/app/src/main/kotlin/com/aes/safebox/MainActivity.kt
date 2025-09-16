@@ -1,4 +1,4 @@
-package com.example.safebox
+package com.aes.safebox
 
 import io.flutter.embedding.android.FlutterActivity
 
