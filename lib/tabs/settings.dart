@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:safebox/custom_controls/login_widget.dart';
 import 'package:safebox/models/lock_option.dart';
 import 'package:safebox/screen/export_import_screen.dart';
-import 'package:safebox/screen/start_screen.dart';
 import 'package:safebox/screen/sync_screen.dart';
 import 'package:safebox/services/app_settings.dart';
 import 'package:safebox/services/auth/master_password_manager.dart';
@@ -233,7 +233,7 @@ class _SettingsTabState extends State<SettingsTab> {
                 );
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => StartScreen()),
+                  MaterialPageRoute(builder: (_) => LoginWidget()),
                 );
               }
             },
