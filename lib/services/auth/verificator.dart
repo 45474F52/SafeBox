@@ -32,7 +32,7 @@ class Verificator {
     final salt = SaltProvider.getSalt();
     final ecnryptedToken = await tokenFile.readAsString();
     final encryptor = Encryptor(masterPassword, salt);
-    final decrypted = await encryptor.decryptData(ecnryptedToken);
+    final decrypted = encryptor.decryptData(ecnryptedToken);
 
     return decrypted == _verificationPlaintText;
   }
@@ -40,7 +40,7 @@ class Verificator {
   Future<void> _createVerificationToken(String masterPassword) async {
     final salt = SaltProvider.getSalt();
     final encryptor = Encryptor(masterPassword, salt);
-    final encrypt = await encryptor.encryptData(_verificationPlaintText);
+    final encrypt = encryptor.encryptData(_verificationPlaintText);
     final tokenFile = await _verificationTokenFileFuture;
     await tokenFile.writeAsString(encrypt);
   }

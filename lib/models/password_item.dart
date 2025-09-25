@@ -7,6 +7,7 @@ class PasswordItem {
   final String url;
   final String description;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
 
   PasswordItem({
     String? id,
@@ -15,6 +16,7 @@ class PasswordItem {
     required this.url,
     required this.description,
     DateTime? updatedAt,
+    this.deletedAt,
     // ignore: unnecessary_this
   }) : this.id = id ?? Uuid().v4(),
        // ignore: unnecessary_this
@@ -28,6 +30,9 @@ class PasswordItem {
       url: json['url'] as String,
       description: json['description'] as String,
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      deletedAt: DateTime.tryParse(
+        json['deleted_at'] == null ? '' : json['deleted_at'] as String,
+      ),
     );
   }
 
@@ -39,6 +44,7 @@ class PasswordItem {
       'url': url,
       'description': description,
       'updated_at': updatedAt.toIso8601String(),
+      'deleted_at': deletedAt?.toIso8601String(),
     };
   }
 
@@ -49,6 +55,7 @@ class PasswordItem {
     String? url,
     String? description,
     DateTime? updatedAt,
+    DateTime? deletedAt,
   }) {
     return PasswordItem(
       id: id ?? this.id,
@@ -57,6 +64,7 @@ class PasswordItem {
       url: url ?? this.url,
       description: description ?? this.description,
       updatedAt: updatedAt ?? DateTime.now(),
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 }

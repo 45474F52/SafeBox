@@ -8,6 +8,7 @@ import 'package:safebox/services/security/salt_provider.dart';
 
 class PasswordStorage {
   static const String _fileName = 'sbpf.enc';
+  static const _deleteTimeout = Duration(days: 30);
 
   late final File _passwords;
   late final Encryptor _encryptor;
@@ -18,8 +19,9 @@ class PasswordStorage {
     final salt = SaltProvider.getSalt();
     final encryptor = Encryptor(master, salt);
     final file = await _initializeFile();
-
-    return PasswordStorage._(encryptor, file);
+    final ps = PasswordStorage._(encryptor, file);
+    await ps.cleanExpired();
+    return ps;
   }
 
   PasswordStorage._(this._encryptor, this._passwords);
@@ -35,7 +37,7 @@ class PasswordStorage {
 
   Future<List<PasswordItem>> load() async {
     final encryptedData = await _readFile();
-    final data = await _encryptor.decryptData(encryptedData);
+    final data = _encryptor.decryptData(encryptedData);
     if (data == null || data.isEmpty) {
       return [];
     }
@@ -43,9 +45,14 @@ class PasswordStorage {
     return jsonList.map((item) => PasswordItem.fromJSON(item)).toList();
   }
 
+  Future<List<PasswordItem>> loadActive() async {
+    final items = await load();
+    return items.where((item) => item.deletedAt == null).toList();
+  }
+
   Future<void> save(List<PasswordItem> items) async {
     final jsonString = jsonEncode(items.map((item) => item.toJSON()).toList());
-    final String encryptedData = await _encryptor.encryptData(jsonString);
+    final String encryptedData = _encryptor.encryptData(jsonString);
     await _passwords.writeAsString(encryptedData);
   }
 
@@ -63,11 +70,32 @@ class PasswordStorage {
     }
   }
 
-  Future<void> deleteItem(int index) async {
+  Future<void> markAsDeleted(String id) async {
     final items = await load();
-    if (index >= 0) {
-      items.removeAt(index);
-      await save(items);
+    if (id.isNotEmpty) {
+      final item = items.firstWhere((item) => item.id == id);
+      final index = items.indexOf(item);
+      items[index] = item.copyWith(deletedAt: DateTime.now());
+    }
+    await save(items);
+  }
+
+  Future<void> cleanExpired() async {
+    try {
+      final items = await load();
+      final count = items.length;
+      final now = DateTime.now();
+      items.removeWhere(
+        (item) =>
+            item.deletedAt != null &&
+            now.difference(item.deletedAt!) > _deleteTimeout,
+      );
+      final newCount = items.length;
+      if (newCount != count) {
+        await save(items);
+      }
+    } catch (e) {
+      print(e.toString());
     }
   }
 

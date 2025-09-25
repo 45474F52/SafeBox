@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math';
+
+import 'package:safebox/screen/passphrase_generator_screen.dart';
 
 class PasswordGeneratorTab extends StatefulWidget {
   const PasswordGeneratorTab({super.key});
@@ -9,6 +12,8 @@ class PasswordGeneratorTab extends StatefulWidget {
 }
 
 class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
+  static const _minLength = 8;
+  static const _maxLength = 32;
   int _length = 12;
   bool _includeUppercase = true;
   bool _includeLowercase = true;
@@ -52,11 +57,12 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
     });
   }
 
-  void _copyToClipboard() {
+  Future<void> _copyToClipboard() async {
     if (_generatedPassword.contains('Нажмите') ||
         _generatedPassword.contains('Выберите')) {
       return;
     }
+    await Clipboard.setData(ClipboardData(text: _generatedPassword));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -88,8 +94,8 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
             const Text('Длина пароля:'),
             Slider(
               value: _length.toDouble(),
-              min: 8,
-              max: 32,
+              min: _minLength.toDouble(),
+              max: _maxLength.toDouble(),
               divisions: 24,
               label: _length.toString(),
               onChanged: (value) => setState(() => _length = value.round()),
@@ -142,7 +148,6 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
 
             const SizedBox(height: 24),
 
-            // Пароль
             const Text('Сгенерированный пароль:'),
             const SizedBox(height: 8),
             Card(
@@ -167,6 +172,22 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
                 onPressed: _copyToClipboard,
                 icon: const Icon(Icons.copy, size: 16),
                 label: const Text('Копировать'),
+              ),
+            ),
+            const SizedBox(height: 8.0),
+
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PassphraseGeneratorScreen(),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.text_snippet),
+                label: Text('Генератор парольных фраз'),
               ),
             ),
           ],

@@ -49,23 +49,27 @@ class CryptoManager {
   }
 
   Uint8List encryptData(Uint8List data) {
-    return Uint8List.fromList(
-      utf8
-          .decode(data)
-          .split('')
-          .map((char) => char.codeUnitAt(0) ^ _tempKey.length)
-          .toList(),
-    );
+    return data.isEmpty
+        ? data
+        : Uint8List.fromList(
+            utf8
+                .decode(data)
+                .split('')
+                .map((char) => char.codeUnitAt(0) ^ _tempKey.length)
+                .toList(),
+          );
   }
 
   Uint8List decryptData(Uint8List data) {
-    return Uint8List.fromList(
-      utf8
-          .decode(data)
-          .split('')
-          .map((char) => char.codeUnitAt(0) ^ _remoteTempKey!.length)
-          .toList(),
-    );
+    return data.isEmpty
+        ? data
+        : Uint8List.fromList(
+            utf8
+                .decode(data)
+                .split('')
+                .map((char) => char.codeUnitAt(0) ^ _remoteTempKey!.length)
+                .toList(),
+          );
   }
 
   Uint8List get publicKey => Uint8List.fromList(_publicKey.codeUnits);

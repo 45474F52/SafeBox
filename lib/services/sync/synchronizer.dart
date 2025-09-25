@@ -6,6 +6,8 @@ import 'dart:typed_data';
 import 'package:safebox/models/password_item.dart';
 import 'package:safebox/services/security/crypto_manager.dart';
 import 'package:safebox/services/security/password_storage.dart';
+import 'package:safebox/services/sync/items_merger.dart';
+import 'package:safebox/services/sync/message.dart';
 import 'package:safebox/services/sync/sync_state.dart';
 
 class Synchronizer {
@@ -38,14 +40,103 @@ class Synchronizer {
 
     _cryptoManager = CryptoManager();
 
-    _serverStarted = _startServerInternal();
+    _serverStarted = _startServer();
   }
 
-  Future<void> _startServerInternal() async {
+  Future<void> _startServer() async {
     try {
-      await _startServer();
+      final server = await ServerSocket.bind(
+        InternetAddress.anyIPv4,
+        port,
+        shared: true,
+      );
+
+      server.listen((client) {
+        final buffer = StringBuffer();
+        var state = WaitingFor.sync;
+
+        client.listen(
+          (data) {
+            final text = String.fromCharCodes(data);
+            buffer.write(text);
+
+            if (text.contains(Platform.lineTerminator)) {
+              final message = Message(buffer.toString().trim());
+              buffer.clear();
+
+              try {
+                switch (state) {
+                  case WaitingFor.sync:
+                    if (message.isStartSync) {
+                      client.writeln(
+                        Message.sendPublicKey(_cryptoManager.publicKey),
+                      );
+                      client.flush();
+                      state = WaitingFor.publicKey;
+                    }
+                    break;
+                  case WaitingFor.publicKey:
+                    if (message.containPublicKey) {
+                      _cryptoManager.remotePublicKey = message.publicKey!;
+                      _passwordStorage.load().then((localItems) {
+                        final localBytes = _passwordsToBytes(localItems);
+
+                        final encryptedLocalData = _cryptoManager.encryptData(
+                          localBytes,
+                        );
+                        final encryptedLocalTempKey = _cryptoManager
+                            .encryptTempKey(
+                              base64Decode(_cryptoManager.remotePublicKey!),
+                            );
+
+                        client.writeln(
+                          Message.sendDataWithKey(
+                            encryptedLocalData,
+                            encryptedLocalTempKey,
+                          ),
+                        );
+                        client.flush();
+
+                        state = WaitingFor.dataWithKey;
+                      });
+                    }
+                    break;
+                  case WaitingFor.dataWithKey:
+                    if (message.containData) {
+                      final (String data, String key) = message.dataWithKey!;
+
+                      _saveRemoteData(base64Decode(data));
+                      _cryptoManager.decryptRemoteTempKey(base64Decode(key));
+
+                      client.writeln(Message.finishSync);
+                      client.flush();
+                      state = WaitingFor.finish;
+                    }
+                    break;
+                  case WaitingFor.finish:
+                    if (message.isFinishSync) {
+                      client.close();
+                      _syncFile();
+                      break;
+                    }
+                }
+              } catch (e) {
+                print('SYNC.error: ошибка обработки сообщений - $e');
+                client.close();
+              }
+            }
+          },
+          onDone: () {
+            client.close();
+          },
+          onError: (e) {
+            print('SYNC.error: ошибка сокета - $e');
+            client.close();
+          },
+        );
+      });
     } catch (e) {
-      print('Start sync server error: $e');
+      print('SYNC.error: не удалось запустить сервер - $e');
     }
   }
 
@@ -58,7 +149,7 @@ class Synchronizer {
       var state = WaitingFor.publicKey;
 
       final completer = Completer();
-      socket.writeln('START SYNC');
+      socket.writeln(Message.startSync);
       await socket.flush();
 
       socket.listen(
@@ -66,34 +157,28 @@ class Synchronizer {
           final text = String.fromCharCodes(data);
           buffer.write(text);
 
-          if (text.contains('\n')) {
-            final message = buffer.toString().trim();
+          if (text.contains(Platform.lineTerminator)) {
+            final message = Message(buffer.toString().trim());
             buffer.clear();
 
             try {
               switch (state) {
                 case WaitingFor.publicKey:
-                  if (message.startsWith('PK:')) {
-                    _cryptoManager.remotePublicKey = message.substring(3);
+                  if (message.containPublicKey) {
+                    _cryptoManager.remotePublicKey = message.publicKey!;
                     socket!.writeln(
-                      'PK:${base64Encode(_cryptoManager.publicKey)}',
+                      Message.sendPublicKey(_cryptoManager.publicKey),
                     );
                     await socket.flush();
                     state = WaitingFor.dataWithKey;
                   }
                   break;
                 case WaitingFor.dataWithKey:
-                  if (message.startsWith('DWK:')) {
-                    final pair = message
-                        .substring(4)
-                        .split(':::'); // {data:::key}
-                    final encryptedRemoteData = pair[0];
-                    final encryptedRemoteTempKey = pair[1];
+                  if (message.containData) {
+                    final (String data, String key) = message.dataWithKey!;
 
-                    await _saveRemoteData(base64Decode(encryptedRemoteData));
-                    _cryptoManager.decryptRemoteTempKey(
-                      base64Decode(encryptedRemoteTempKey),
-                    );
+                    await _saveRemoteData(base64Decode(data));
+                    _cryptoManager.decryptRemoteTempKey(base64Decode(key));
 
                     final localItems = await _passwordStorage.load();
                     final localBytes = _passwordsToBytes(localItems);
@@ -106,7 +191,10 @@ class Synchronizer {
                     );
 
                     socket!.writeln(
-                      'DWK:${base64Encode(encryptedLocalData)}:::${base64Encode(encryptedLocalTempKey)}',
+                      Message.sendDataWithKey(
+                        encryptedLocalData,
+                        encryptedLocalTempKey,
+                      ),
                     );
                     await socket.flush();
 
@@ -114,8 +202,8 @@ class Synchronizer {
                   }
                   break;
                 case WaitingFor.finish:
-                  if (message == 'FINISH SYNC') {
-                    socket!.writeln('FINISH SYNC');
+                  if (message.isFinishSync) {
+                    socket!.writeln(Message.finishSync);
                     await socket.flush();
 
                     await _syncFile();
@@ -157,165 +245,22 @@ class Synchronizer {
     }
   }
 
-  Future<void> _startServer() async {
-    try {
-      final server = await ServerSocket.bind(
-        InternetAddress.anyIPv4,
-        port,
-        shared: true,
-      );
-      server.listen((client) {
-        final buffer = StringBuffer();
-        var state = WaitingFor.sync;
-
-        client.listen(
-          (data) {
-            final text = String.fromCharCodes(data);
-            buffer.write(text);
-
-            if (text.contains('\n')) {
-              final msg = buffer.toString().trim();
-              buffer.clear();
-
-              try {
-                switch (state) {
-                  case WaitingFor.sync:
-                    if (msg == 'START SYNC') {
-                      client.writeln(
-                        'PK:${base64Encode(_cryptoManager.publicKey)}',
-                      );
-                      client.flush();
-                      state = WaitingFor.publicKey;
-                    }
-                    break;
-                  case WaitingFor.publicKey:
-                    if (msg.startsWith('PK:')) {
-                      _cryptoManager.remotePublicKey = msg.substring(3);
-                      _passwordStorage.load().then((localItems) {
-                        final localBytes = _passwordsToBytes(localItems);
-
-                        final encryptedLocalData = _cryptoManager.encryptData(
-                          localBytes,
-                        );
-                        final encryptedLocalTempKey = _cryptoManager
-                            .encryptTempKey(
-                              base64Decode(_cryptoManager.remotePublicKey!),
-                            );
-
-                        client.writeln(
-                          'DWK:${base64Encode(encryptedLocalData)}:::${base64Encode(encryptedLocalTempKey)}',
-                        );
-                        client.flush();
-
-                        state = WaitingFor.dataWithKey;
-                      });
-                    }
-                    break;
-                  case WaitingFor.dataWithKey:
-                    if (msg.startsWith('DWK:')) {
-                      final pair = msg
-                          .substring(4)
-                          .split(':::'); // {data:::key}
-                      final encryptedRemoteData = pair[0];
-                      final encryptedRemoteTempKey = pair[1];
-
-                      _saveRemoteData(base64Decode(encryptedRemoteData));
-                      _cryptoManager.decryptRemoteTempKey(
-                        base64Decode(encryptedRemoteTempKey),
-                      );
-
-                      client.writeln('FINISH SYNC');
-                      client.flush();
-                      state = WaitingFor.finish;
-                    }
-                    break;
-                  case WaitingFor.finish:
-                    if (msg == 'FINISH SYNC') {
-                      client.close();
-                      _syncFile();
-                      break;
-                    }
-                }
-              } catch (e) {
-                print('SYNC.error: ошибка обработки сообщений - $e');
-                client.close();
-              }
-            }
-          },
-          onDone: () {
-            client.close();
-          },
-          onError: (e) {
-            print('SYNC.error: ошибка сокета - $e');
-            client.close();
-          },
-        );
-      });
-    } catch (e) {
-      print('SYNC.error: не удалось запустить сервер - $e');
-    }
-  }
-
   Future<void> _saveRemoteData(Uint8List encryptedData) async {
     await _remotePasswords.writeAsBytes(encryptedData);
   }
 
-  Future<void> _syncFile() async {
-    try {
-      final localItems = await _passwordStorage.load();
-
-      final remoteEncryptedBytes = await _remotePasswords.readAsBytes();
-
-      if (localItems.isEmpty && remoteEncryptedBytes.isEmpty) {
-        return;
-      }
-
-      if (remoteEncryptedBytes.isEmpty) {
-        return;
-      }
-
-      final remoteDecryptedBytes = _cryptoManager.decryptData(
-        remoteEncryptedBytes,
-      );
-      final remoteItems = _bytesToPasswords(remoteDecryptedBytes);
-
-      if (localItems.isEmpty) {
-        await _passwordStorage.save(remoteItems);
-        return;
-      }
-
-      final mergedItems = _mergePasswordItems(localItems, remoteItems);
-      await _passwordStorage.save(mergedItems);
-      await _remotePasswords.delete();
-    } catch (e) {
-      print('SYNC.error: $e');
-      rethrow;
-    }
+  Future<List<PasswordItem>> _loadRemoteData() async {
+    final bytes = await _remotePasswords.readAsBytes();
+    final decrypted = _cryptoManager.decryptData(bytes);
+    return _bytesToPasswords(decrypted);
   }
 
-  List<PasswordItem> _mergePasswordItems(
-    List<PasswordItem> local,
-    List<PasswordItem> remote,
-  ) {
-    final Map<String, PasswordItem> merged = {};
-
-    for (final item in local) {
-      merged[item.id] = item;
-    }
-
-    for (final item in remote) {
-      final existing = merged[item.id];
-
-      if (existing == null) {
-        merged[item.id] = item;
-      } else {
-        if (item.updatedAt.isAfter(existing.updatedAt)) {
-          merged[item.id] = item;
-        }
-      }
-    }
-
-    return merged.values.toList();
+  Future<void> _syncFile() async {
+    final localItems = await _passwordStorage.load();
+    final remoteItems = await _loadRemoteData();
+    ItemsMerger.sync(localItems, remoteItems);
+    await _passwordStorage.save(localItems);
+    await _remotePasswords.delete();
   }
 
   Uint8List _passwordsToBytes(List<PasswordItem> items) {
@@ -324,6 +269,9 @@ class Synchronizer {
   }
 
   List<PasswordItem> _bytesToPasswords(Uint8List bytes) {
+    if (bytes.isEmpty) {
+      return [];
+    }
     final jsonString = utf8.decode(bytes);
     final jsonList = jsonDecode(jsonString) as List;
     return jsonList.map((json) => PasswordItem.fromJSON(json)).toList();

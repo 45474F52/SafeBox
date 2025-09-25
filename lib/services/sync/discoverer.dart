@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:safebox/services/sync/sync_helper.dart';
+import 'package:safebox/services/helpers/network_helper.dart';
 
 class Discoverer {
   static const int port = 5150;
@@ -16,13 +16,15 @@ class Discoverer {
   Timer? _timer;
   RawDatagramSocket? _socket;
 
+  /// Get IPs of devices with this app in LAN
+  /// by listen datagrams with special message
+  /// from background_worker + local IP
   Future<List<String>> discoverDevices() async {
     _foundIPs.clear();
 
-    final myIP = await SyncHelper.getLocalIP();
+    final myIP = await NetworkHelper.getLocalIP();
     if (myIP == null) {
-      print('Не удалось обнаружить локальный IP');
-      return [];
+      throw 'Не удалось обнаружить локальный IP';
     }
 
     final List<String> broadcastAddress = _getBroadcastAddress(myIP);
@@ -62,7 +64,7 @@ class Discoverer {
       try {
         _socket!.send(data, InternetAddress(broadcast), port);
       } catch (e) {
-        print('Ошибка отправки на $broadcast: $e');
+        throw 'Ошибка отправки на $broadcast: $e';
       }
     }
 
