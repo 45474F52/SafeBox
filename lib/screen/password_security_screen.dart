@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:safebox/custom_controls/base_screen.dart';
-import 'package:safebox/services/passwords_strength/password_security_checker.dart';
-import 'package:safebox/services/passwords_strength/strength_level.dart';
-import 'package:safebox/services/security/password_storage.dart';
-
+import '../l10n/strings.dart';
+import '../custom_controls/base_screen.dart';
+import '../services/passwords_strength/password_security_checker.dart';
+import '../services/passwords_strength/strength_level.dart';
+import '../services/security/password_storage.dart';
 import '../models/password_item.dart';
 
 class PasswordSecurityScreen extends BaseScreen<PasswordSecurityScreen> {
@@ -40,7 +40,7 @@ class _PasswordSecurityScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Статистика безопасности паролей')),
+      appBar: AppBar(title: Text(Strings.of(context).securityStatsTitle)),
       body: activityDetection(
         FutureBuilder(
           future: _futurePasswords,
@@ -50,11 +50,11 @@ class _PasswordSecurityScreenState
             }
             if (snapshot.hasError) {
               return Center(
-                child: Text('Ошибка при загрузке паролей: ${snapshot.error}'),
+                child: Text(Strings.of(context).errorMsg(snapshot.error!)),
               );
             }
             if (!snapshot.hasData) {
-              return Center(child: Text('Нет данных'));
+              return Center(child: Text(Strings.of(context).noDataError));
             }
             final passwords = snapshot.data!;
 
@@ -120,8 +120,9 @@ class _PasswordSecurityScreenState
                 Padding(
                   padding: EdgeInsetsGeometry.all(16.0),
                   child: Text(
-                    'Проанализировано паролей: $_totalCount\n'
-                    'Ненадежных паролей: $_weakCount',
+                    Strings.of(
+                      context,
+                    ).statsSummaryMessage(_totalCount, _weakCount),
                     style: TextStyle(
                       fontSize: 14,
                       color: const Color.fromARGB(255, 116, 116, 116),
@@ -151,23 +152,18 @@ class _PasswordSecurityScreenState
     }
   }
 
-  static String _getTextFromStrength(StrengthLevel strength) {
+  String _getTextFromStrength(StrengthLevel strength) {
     switch (strength) {
       case StrengthLevel.veryWeak:
-        return 'Крайне ненадежный пароль. Нужно:\n'
-            'увеличить длину и добавить спецсимволы';
+        return Strings.of(context).veryWeakLevelText;
       case StrengthLevel.weak:
-        return 'Слабый пароль. Добавьте:\n'
-            'спецсимволы и заглавные буквы';
+        return Strings.of(context).weakLevelText;
       case StrengthLevel.moderate:
-        return 'Средняя надежность. Рекомендуется:\n'
-            'увеличить длину до 16+ символов';
+        return Strings.of(context).moderateLevelText;
       case StrengthLevel.strong:
-        return 'Надежный пароль. Содержит:\n'
-            'все типы символов';
+        return Strings.of(context).strongLevelText;
       case StrengthLevel.veryStrong:
-        return 'Отличный пароль!\n'
-            'Соответствует всем требованиям безопасности';
+        return Strings.of(context).veryStrongLevelText;
     }
   }
 

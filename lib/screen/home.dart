@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:safebox/custom_controls/base_screen.dart';
-import 'package:safebox/services/sync/background_worker.dart';
-import 'package:safebox/services/sync/synchronizer.dart';
-import 'package:safebox/tabs/passwords.dart';
-import 'package:safebox/tabs/pass_gen.dart';
-import 'package:safebox/tabs/settings.dart';
-
+import '../custom_controls/base_screen.dart';
+import '../l10n/strings.dart';
+import '../services/sync/background_worker.dart';
+import '../services/sync/synchronizer.dart';
+import '../tabs/passwords.dart';
+import '../tabs/pass_gen.dart';
+import '../tabs/settings.dart';
 import '../services/security/password_storage.dart';
 
 class HomeScreen extends BaseScreen<HomeScreen> {
@@ -40,14 +40,14 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
-              appBar: AppBar(title: Text('Загрузка...')),
+              appBar: AppBar(title: Text(Strings.of(context).loadingMsg)),
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 16.0),
-                    Text('Инициализация...'),
+                    Text(Strings.of(context).initMsg),
                   ],
                 ),
               ),
@@ -56,7 +56,7 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
 
           if (snapshot.hasError) {
             return Scaffold(
-              appBar: AppBar(title: Text('ОШИБКА!')),
+              appBar: AppBar(title: Text(Strings.of(context).error)),
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -64,7 +64,7 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
                     Icon(Icons.error, color: Colors.red, size: 48.0),
                     SizedBox(height: 16.0),
                     Text(
-                      'Ошибка инициализации',
+                      Strings.of(context).initError,
                       style: TextStyle(fontSize: 16.0),
                     ),
                     Text(
@@ -86,9 +86,18 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
               appBar: AppBar(
                 bottom: TabBar(
                   tabs: [
-                    Tab(icon: Icon(Icons.lock), text: 'Пароли'),
-                    Tab(icon: Icon(Icons.create), text: 'Генератор'),
-                    Tab(icon: Icon(Icons.settings), text: 'Настройки'),
+                    Tab(
+                      icon: Icon(Icons.lock),
+                      text: Strings.of(context).passwordsTab,
+                    ),
+                    Tab(
+                      icon: Icon(Icons.create),
+                      text: Strings.of(context).generatorTab,
+                    ),
+                    Tab(
+                      icon: Icon(Icons.settings),
+                      text: Strings.of(context).settingsTab,
+                    ),
                   ],
                   overlayColor: WidgetStateProperty.all(Colors.transparent),
                 ),

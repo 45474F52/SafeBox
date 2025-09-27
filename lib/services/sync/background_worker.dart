@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:safebox/services/sync/discoverer.dart';
-import 'package:safebox/services/helpers/network_helper.dart';
+import 'discoverer.dart';
+import '../helpers/network_helper.dart';
 
 class BackgroundWorker {
   /// Starts a periodic sending message with local IP in LAN

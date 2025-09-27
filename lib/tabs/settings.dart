@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:safebox/custom_controls/login_widget.dart';
-import 'package:safebox/models/lock_option.dart';
-import 'package:safebox/screen/export_import_screen.dart';
-import 'package:safebox/screen/sync_screen.dart';
-import 'package:safebox/services/app_settings.dart';
-import 'package:safebox/services/auth/master_password_manager.dart';
-import 'package:safebox/services/inactivity_manager.dart';
-import 'package:safebox/services/security/password_storage.dart';
-import 'package:safebox/services/auth/verificator.dart';
-import 'package:safebox/services/sync/synchronizer.dart';
+import 'package:provider/provider.dart';
+import 'package:safebox/custom_controls/settings_item.dart';
+import '../l10n/locale_provider.dart';
+import '../l10n/strings.dart';
+import '../services/theme_provider.dart';
+import '../custom_controls/login_widget.dart';
+import '../l10n/app_locales.dart';
+import '../models/lock_option.dart';
+import '../screen/export_import_screen.dart';
+import '../screen/sync_screen.dart';
+import '../services/app_settings.dart';
+import '../services/auth/master_password_manager.dart';
+import '../services/inactivity_manager.dart';
+import '../services/security/password_storage.dart';
+import '../services/auth/verificator.dart';
+import '../services/sync/synchronizer.dart';
+import '../services/helpers/locale_helper.dart';
 
 class SettingsTab extends StatefulWidget {
   final PasswordStorage storage;
@@ -34,6 +41,11 @@ class _SettingsTabState extends State<SettingsTab> {
 
   final Verificator _verificator = Verificator();
   late final PasswordStorage _storage;
+  late final LocaleProvider _localeProvider;
+  late final ThemeProvider _themeProvider;
+
+  late final FocusNode _localeFocus;
+  late final FocusNode _themeFocus;
 
   bool _biometricsEnabled = false;
   bool _autoLockEnabled = false;
@@ -42,8 +54,19 @@ class _SettingsTabState extends State<SettingsTab> {
   @override
   void initState() {
     super.initState();
+    _localeFocus = FocusNode();
+    _themeFocus = FocusNode();
     _storage = widget.storage;
+    _localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _localeFocus.dispose();
+    _themeFocus.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -52,13 +75,15 @@ class _SettingsTabState extends State<SettingsTab> {
     final biometricsEnabled = AppSettings.biometricsEnabled;
     final autolockEnabled = AppSettings.autolockEnabled;
     final autolockTime = AppSettings.autolockTime;
+    _localeProvider.locale = AppSettings.locale;
+    _themeProvider.theme = AppSettings.themeMode;
 
     setState(() {
       _biometricsEnabled = biometricsEnabled;
       _autoLockEnabled = autolockTime != null ? autolockEnabled : false;
       _autoLockTime = _autoLockEnabled
           ? LockOption.parse(autolockTime!)
-          : _defLockOption;
+          : LockOption('', Duration.zero);
       InactivityManagerSingleton().setDuration(_autoLockTime.duration);
     });
   }
@@ -70,135 +95,195 @@ class _SettingsTabState extends State<SettingsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Настройки приложения',
+          Text(
+            Strings.of(context).appSettingsTitle,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
 
-          const Row(
-            mainAxisSize: MainAxisSize.min,
+          SettingsItem(
+            titleIcon: Icons.shield,
+            titleText: Strings.of(context).safety,
             children: [
-              Icon(Icons.shield),
-              SizedBox(width: 8.0),
-              Text(
-                'Безопасность',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              SwitchListTile(
+                title: Text(Strings.of(context).biometrics),
+                subtitle: Text(Strings.of(context).biometricsUnlock),
+                value: _biometricsEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _biometricsEnabled = value;
+                  });
+                  AppSettings.setBiometricsEnabled(value);
+                },
               ),
-            ],
-          ),
-          const Divider(),
-          SwitchListTile(
-            title: const Text('Биометрия'),
-            subtitle: const Text('Разблокировка по лицу или отпечатку'),
-            value: _biometricsEnabled,
-            onChanged: (value) {
-              setState(() {
-                _biometricsEnabled = value;
-              });
-              AppSettings.setBiometricsEnabled(value);
-            },
-          ),
-          SwitchListTile(
-            title: const Text('Автоблокировка'),
-            subtitle: const Text('Блокировать приложение при бездействии'),
-            value: _autoLockEnabled,
-            onChanged: (value) async {
-              setState(() => _autoLockEnabled = value);
-              await AppSettings.setAutolockEnabled(value);
-            },
-          ),
-          Visibility(
-            visible: _autoLockEnabled,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
-              child: DropdownButtonFormField<LockOption>(
-                key: ValueKey(_autoLockTime.minutes),
-                initialValue: _autoLockTime,
-                items: _lockOptions.map((option) {
-                  return DropdownMenuItem(
-                    value: option,
-                    child: Text(option.alias),
-                  );
-                }).toList(),
-                onChanged: (LockOption? value) async {
-                  if (value != null) {
-                    setState(() {
-                      _autoLockTime = value;
-                    });
+              SwitchListTile(
+                title: Text(Strings.of(context).autolock),
+                subtitle: Text(Strings.of(context).idleBlock),
+                value: _autoLockEnabled,
+                onChanged: (value) async {
+                  setState(() => _autoLockEnabled = value);
+                  await AppSettings.setAutolockEnabled(value);
+                  if (value == false) {
+                    InactivityManagerSingleton().setDuration(Duration.zero);
+                  } else {
                     InactivityManagerSingleton().setDuration(
-                      _autoLockTime.duration,
+                      _defLockOption.duration,
                     );
-                    await AppSettings.setAutolockTime(value.minutes);
                   }
                 },
-                decoration: const InputDecoration(
-                  labelText: 'Время до блокировки',
-                  border: OutlineInputBorder(),
+              ),
+              Visibility(
+                visible: _autoLockEnabled,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
+                  child: DropdownButtonFormField<LockOption>(
+                    key: ValueKey(_lockOptions.first.minutes),
+                    initialValue: _lockOptions.first,
+                    items: _lockOptions.map((option) {
+                      return DropdownMenuItem(
+                        value: option,
+                        child: Text(option.alias),
+                      );
+                    }).toList(),
+                    onChanged: (LockOption? value) async {
+                      if (value != null) {
+                        setState(() {
+                          _autoLockTime = value;
+                        });
+                        InactivityManagerSingleton().setDuration(
+                          _autoLockTime.duration,
+                        );
+                        await AppSettings.setAutolockTime(value.minutes);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: Strings.of(context).timeBeforeBlocking,
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.storage),
-              SizedBox(width: 8.0),
-              Text('Хранилище', style: TextStyle(fontWeight: FontWeight.w600)),
             ],
           ),
-          const Divider(),
-          ListTile(
-            title: const Text('Синхронизация'),
-            subtitle: const Text('Принудительно синхронизировать пароли'),
-            trailing: const Icon(Icons.sync_alt),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    SyncScreen(synchronizer: widget.synchronizer),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          ListTile(
-            title: Text('Экспорт/Ипорт'),
-            trailing: const Icon(Icons.import_export),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    ExportImportScreen(storage: widget.storage),
-              ),
-            ),
-          ),
-          ListTile(
-            title: Text('Очистить данные', style: TextStyle(color: Colors.red)),
-            trailing: const Icon(Icons.delete, color: Colors.red),
-            onTap: _confirmClearData,
-          ),
-          const SizedBox(height: 8),
 
-          const SizedBox(height: 24),
-
-          const Row(
-            mainAxisSize: MainAxisSize.min,
+          SettingsItem(
+            titleIcon: Icons.storage,
+            titleText: Strings.of(context).storage,
             children: [
-              Icon(Icons.info),
-              SizedBox(width: 8.0),
-              Text(
-                'О приложении',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              ListTile(
+                title: Text(Strings.of(context).synchronization),
+                subtitle: Text(Strings.of(context).forceSync),
+                trailing: const Icon(Icons.sync_alt),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        SyncScreen(synchronizer: widget.synchronizer),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                title: Text(Strings.of(context).exportImport),
+                trailing: const Icon(Icons.import_export),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ExportImportScreen(storage: widget.storage),
+                  ),
+                ),
+              ),
+              ListTile(
+                title: Text(
+                  Strings.of(context).clearData,
+                  style: TextStyle(color: Colors.red),
+                ),
+                trailing: const Icon(Icons.delete, color: Colors.red),
+                onTap: _confirmClearData,
               ),
             ],
           ),
-          const Divider(),
-          const ListTile(title: Text('Версия'), subtitle: Text('SaveBox v1.0')),
-          const ListTile(title: Text('Разработчик'), subtitle: Text('Diego')),
-          const ListTile(title: Text('Лицензия'), subtitle: Text('MIT')),
+
+          SettingsItem(
+            titleIcon: Icons.color_lens,
+            titleText: Strings.of(context).personalizationSettings,
+            children: [
+              ListTile(
+                title: Text(Strings.of(context).languageSettings),
+                trailing: DropdownButton(
+                  focusNode: _localeFocus,
+                  padding: EdgeInsets.symmetric(horizontal: 6),
+                  value: _localeProvider.locale,
+                  underline: Container(
+                    height: 2,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onChanged: (Locale? newValue) {
+                    _localeProvider.locale = newValue!;
+                    _localeFocus.unfocus();
+                  },
+                  items: AppLocales.all.map((Locale value) {
+                    return DropdownMenuItem(
+                      value: value,
+                      child: Text(value.languageName),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+              ListTile(
+                title: Text(Strings.of(context).themeSettings),
+                trailing: DropdownButton(
+                  focusNode: _themeFocus,
+                  padding: EdgeInsets.symmetric(horizontal: 6),
+                  value: _themeProvider.theme,
+                  underline: Container(
+                    height: 2,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onChanged: (ThemeMode? newValue) {
+                    _themeProvider.theme = newValue!;
+                    _themeFocus.unfocus();
+                  },
+                  items: [
+                    DropdownMenuItem(
+                      value: ThemeMode.system,
+                      child: Text(Strings.of(context).themeSystem),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.light,
+                      child: Text(Strings.of(context).themeLight),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.dark,
+                      child: Text(Strings.of(context).themeDark),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          SettingsItem(
+            titleIcon: Icons.info,
+            titleText: Strings.of(context).aboutApp,
+            useBottomPadding: false,
+            children: [
+              ListTile(
+                title: Text(Strings.of(context).version),
+                subtitle: Text('SaveBox v1.0'),
+              ),
+              ListTile(
+                title: Text(Strings.of(context).developer),
+                subtitle: Text('Diego'),
+              ),
+              ListTile(
+                title: Text(Strings.of(context).license),
+                subtitle: Text('MIT'),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -208,15 +293,12 @@ class _SettingsTabState extends State<SettingsTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('⚠️ Очистить всё?'),
-        content: const Text(
-          'Все сохранённые пароли будут безвозвратно удалены. '
-          'Вы уверены?',
-        ),
+        title: Text(Strings.of(context).clearAllQuestion),
+        content: Text(Strings.of(context).clearAllQuestionDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            child: Text(Strings.of(context).cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -226,8 +308,8 @@ class _SettingsTabState extends State<SettingsTab> {
               await MasterPasswordManager.delete();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ Все данные очищены'),
+                  SnackBar(
+                    content: Text(Strings.of(context).allDataCleared),
                     duration: Duration(seconds: 2),
                   ),
                 );
@@ -237,7 +319,10 @@ class _SettingsTabState extends State<SettingsTab> {
                 );
               }
             },
-            child: const Text('Очистить', style: TextStyle(color: Colors.red)),
+            child: Text(
+              Strings.of(context).clear,
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),

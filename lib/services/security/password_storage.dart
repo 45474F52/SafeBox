@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:safebox/services/security/encryptor.dart';
-import 'package:safebox/models/password_item.dart';
-import 'package:safebox/services/security/salt_provider.dart';
+import '../../models/password_item.dart';
+import 'encryptor.dart';
+import 'salt_provider.dart';
 
 class PasswordStorage {
   static const String _fileName = 'sbpf.enc';
@@ -62,8 +62,9 @@ class PasswordStorage {
     await save(items);
   }
 
-  Future<void> updateItem(int index, PasswordItem item) async {
+  Future<void> updateItem(PasswordItem item) async {
     final items = await load();
+    final index = items.indexOf(item);
     if (index >= 0) {
       items[index] = item.copyWith(updatedAt: DateTime.now());
       await save(items);

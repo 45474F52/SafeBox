@@ -2,7 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:safebox/custom_controls/base_screen.dart';
+import '../custom_controls/base_screen.dart';
+import '../l10n/strings.dart';
 
 class PassphraseGeneratorScreen extends BaseScreen<PassphraseGeneratorScreen> {
   const PassphraseGeneratorScreen({super.key});
@@ -81,8 +82,8 @@ class _PassphraseGeneratorScreenState
         await Clipboard.setData(ClipboardData(text: _generatedPhrase));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Парольная фраза скопирована'),
+            SnackBar(
+              content: Text(Strings.of(context).passphraseCopied),
               duration: Duration(seconds: 1),
             ),
           );
@@ -91,7 +92,7 @@ class _PassphraseGeneratorScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Ошибка при копировании: $e'),
+              content: Text(Strings.of(context).errorMsg(e)),
               backgroundColor: Colors.red,
             ),
           );
@@ -103,14 +104,14 @@ class _PassphraseGeneratorScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Генератор парольных фраз')),
+      appBar: AppBar(title: Text(Strings.of(context).passphraseGenTitle)),
       body: activityDetection(
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Количество слов:'),
+              Text(Strings.of(context).wordsCount),
               Slider(
                 value: _wordCount.toDouble(),
                 min: 2.0,
@@ -125,7 +126,7 @@ class _PassphraseGeneratorScreenState
               TextField(
                 controller: _wordController,
                 decoration: InputDecoration(
-                  labelText: 'Добавьте своё слово',
+                  labelText: Strings.of(context).addYourWord,
                   suffixIcon: IconButton(
                     onPressed: _addCustomWord,
                     icon: Icon(Icons.add),
@@ -137,12 +138,12 @@ class _PassphraseGeneratorScreenState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Ваши слова:'),
+                  Text(Strings.of(context).yourWords),
                   TextButton.icon(
                     onPressed: () => setState(() {
                       _customWords.clear();
                     }),
-                    label: const Text('Очистить'),
+                    label: Text(Strings.of(context).clear),
                     icon: Icon(Icons.delete),
                   ),
                 ],
@@ -174,14 +175,14 @@ class _PassphraseGeneratorScreenState
                   onPressed: _generatePassphrase,
                   icon: Icon(Icons.autorenew),
                   label: Text(
-                    'Сгенерировать',
+                    Strings.of(context).generate,
                     style: TextStyle(fontSize: 18.0),
                   ),
                 ),
               ),
               const SizedBox(height: 24.0),
 
-              Text('Сгенерированная парольная фраза:'),
+              Text(Strings.of(context).generatedPassphrase),
               const SizedBox(height: 8.0),
 
               Card(
@@ -204,7 +205,7 @@ class _PassphraseGeneratorScreenState
               Center(
                 child: TextButton.icon(
                   onPressed: _copyToClipboard,
-                  label: Text('Копировать'),
+                  label: Text(Strings.of(context).copy),
                   icon: Icon(Icons.copy, size: 16.0),
                 ),
               ),

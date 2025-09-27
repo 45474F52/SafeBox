@@ -12,6 +12,7 @@ class YandexEntriesConverter implements IEntriesConverter<YandexPasswordEntry> {
           password: item.password,
           url: item.url,
           description: item.comment,
+          tags: item.tags,
         ),
       )
       .toList();
@@ -25,7 +26,7 @@ class YandexEntriesConverter implements IEntriesConverter<YandexPasswordEntry> {
               username: item.login,
               password: item.password,
               comment: item.description,
-              tags: Uri.tryParse(item.url)?.host ?? '',
+              tags: item.tags,
             ),
           )
           .toList();

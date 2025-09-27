@@ -1,4 +1,4 @@
-import 'package:safebox/models/password_item.dart';
+import '../../models/password_item.dart';
 
 class ItemsMerger {
   static void sync(List<PasswordItem> first, List<PasswordItem> second) {

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:safebox/models/password_item.dart';
-import 'package:safebox/screen/password_security_screen.dart';
-import 'package:safebox/services/security/password_storage.dart';
-import 'package:safebox/screen/edit_password_screen.dart';
+import '../l10n/strings.dart';
+import '../models/password_item.dart';
+import '../screen/password_security_screen.dart';
+import '../services/security/password_storage.dart';
+import '../screen/edit_password_screen.dart';
 
 class PasswordsTab extends StatefulWidget {
   final PasswordStorage storage;
@@ -29,9 +30,12 @@ class _PasswordsTabState extends State<PasswordsTab> {
   Future<void> _refreshCategories() async {
     final items = await widget.storage.loadActive();
     _filters = {};
-    for (var item in items) {
-      final domain = Uri.tryParse(item.url)?.host ?? 'Другие';
-      _filters[domain] = true;
+    if (mounted) {
+      for (var item in items) {
+        final domain =
+            Uri.tryParse(item.url)?.host ?? Strings.of(context).othersCategory;
+        _filters[domain] = true;
+      }
     }
     setState(() {});
   }
@@ -57,7 +61,8 @@ class _PasswordsTabState extends State<PasswordsTab> {
 
     if (!_showAll) {
       items = items.where((item) {
-        final domain = Uri.tryParse(item.url)?.host ?? 'Другие';
+        final domain =
+            Uri.tryParse(item.url)?.host ?? Strings.of(context).othersCategory;
         return _filters[domain] ?? false;
       }).toList();
     }
@@ -84,14 +89,14 @@ class _PasswordsTabState extends State<PasswordsTab> {
     }
   }
 
-  void _editItem(int index, PasswordItem item) async {
+  void _editItem(PasswordItem item) async {
     final updated = await Navigator.push<PasswordItem>(
       context,
       MaterialPageRoute(builder: (context) => EditPasswordScreen(item: item)),
     );
 
     if (updated != null) {
-      await widget.storage.updateItem(index, updated);
+      await widget.storage.updateItem(updated);
       _refresh();
     }
   }
@@ -108,7 +113,11 @@ class _PasswordsTabState extends State<PasswordsTab> {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   final items = snapshot.data ?? [];
-                  return Text(items.isNotEmpty ? '${items.length} шт.' : '');
+                  return Text(
+                    items.isNotEmpty
+                        ? '${items.length} ${Strings.of(context).piecesPrefix}'
+                        : '',
+                  );
                 }
                 return const SizedBox();
               },
@@ -150,7 +159,9 @@ class _PasswordsTabState extends State<PasswordsTab> {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('ОШИБКА: ${snapshot.error}'));
+            return Center(
+              child: Text(Strings.of(context).errorMsg(snapshot.error!)),
+            );
           }
 
           final items = snapshot.data ?? [];
@@ -164,9 +175,11 @@ class _PasswordsTabState extends State<PasswordsTab> {
                   : null;
 
               final currentDomain =
-                  Uri.tryParse(currentItem.url)?.host ?? 'Другие';
+                  Uri.tryParse(currentItem.url)?.host ??
+                  Strings.of(context).othersCategory;
               final nextDomain = nextItem != null
-                  ? Uri.tryParse(nextItem.url)?.host ?? 'Другие'
+                  ? Uri.tryParse(nextItem.url)?.host ??
+                        Strings.of(context).othersCategory
                   : null;
 
               if (nextDomain != currentDomain || index == items.length - 1) {
@@ -176,101 +189,125 @@ class _PasswordsTabState extends State<PasswordsTab> {
             },
             itemBuilder: (context, index) {
               final item = items[index];
-              final currentDomain = Uri.tryParse(item.url)?.host ?? 'Другие';
+              final currentDomain =
+                  Uri.tryParse(item.url)?.host ??
+                  Strings.of(context).othersCategory;
 
-              if (index == 0 ||
-                  (index > 0 &&
-                      Uri.tryParse(items[index - 1].url)?.host !=
-                          currentDomain)) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: Text(
-                        currentDomain,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16.0,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withAlpha(135),
-                        ),
-                      ),
-                    ),
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.transparent,
-                        child: Icon(Icons.key),
-                      ),
-                      title: Text(item.login),
-                      subtitle: Text(item.url),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _editItem(index, item),
-                      onLongPress: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Удалить?'),
-                            content: Text('Удалить пароль для ${item.url}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Отмена'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Удалить'),
-                              ),
-                            ],
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWideScreen = constraints.maxWidth > 735.0;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (index == 0 ||
+                          (index > 0 &&
+                              Uri.tryParse(items[index - 1].url)?.host !=
+                                  currentDomain))
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 8.0,
                           ),
-                        );
-
-                        if (confirmed == true) {
-                          await widget.storage.markAsDeleted(item.id);
-                          _refresh();
-                        }
-                      },
-                    ),
-                  ],
-                );
-              }
-
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.transparent,
-                  child: Icon(Icons.key),
-                ),
-                title: Text(item.login),
-                subtitle: Text(item.url),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _editItem(index, item),
-                onLongPress: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Удалить?'),
-                      content: Text('Удалить пароль для ${item.url}?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Отмена'),
+                          child: Text(
+                            currentDomain,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.0,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withAlpha(135),
+                            ),
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Удалить'),
+
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.transparent,
+                          child: Icon(Icons.key),
                         ),
-                      ],
-                    ),
+                        title: isWideScreen
+                            ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [Text(item.login)],
+                                  ),
+                                  Wrap(
+                                    spacing: 8.0,
+                                    children: item.tagList.map((tag) {
+                                      return Chip(
+                                        label: Text(tag),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10.0,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              )
+                            : Text(item.login),
+                        subtitle: isWideScreen
+                            ? Text(item.url)
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(item.url),
+                                  Wrap(
+                                    spacing: 8.0,
+                                    children: item.tagList.map((tag) {
+                                      return Chip(
+                                        label: Text(tag),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10.0,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _editItem(item),
+                        onLongPress: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(Strings.of(context).removeQuestion),
+                              content: Text(
+                                Strings.of(
+                                  context,
+                                ).removePasswordQuestion(item.url),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: Text(Strings.of(context).cancel),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text(Strings.of(context).delete),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed == true) {
+                            await widget.storage.markAsDeleted(item.id);
+                            _refresh();
+                          }
+                        },
+                      ),
+                    ],
                   );
-
-                  if (confirmed == true) {
-                    await widget.storage.markAsDeleted(item.id);
-                    _refresh();
-                  }
                 },
               );
             },
@@ -287,13 +324,13 @@ class _PasswordsTabState extends State<PasswordsTab> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text('Фильтры'),
+              title: Text(Strings.of(context).filters),
               content: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SwitchListTile(
-                      title: const Text('Показать все'),
+                      title: Text(Strings.of(context).showAll),
                       value: _showAll,
                       onChanged: (value) {
                         setStateDialog(() {
@@ -320,7 +357,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
               ),
               actions: [
                 TextButton(
-                  child: const Text('Закрыть'),
+                  child: Text(Strings.of(context).close),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -336,11 +373,11 @@ class _PasswordsTabState extends State<PasswordsTab> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Поиск'),
+          title: Text(Strings.of(context).search),
           content: TextField(
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Введите поисковый запрос',
+            decoration: InputDecoration(
+              hintText: Strings.of(context).enterSearchQuery,
             ),
             onChanged: (value) {
               setState(() {
@@ -351,7 +388,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
           ),
           actions: [
             TextButton(
-              child: const Text('Закрыть'),
+              child: Text(Strings.of(context).close),
               onPressed: () => Navigator.pop(context),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/strings.dart';
 import '../screen/home.dart';
 import '../services/app_settings.dart';
 import '../services/auth/biometric_auth.dart';
@@ -39,20 +40,23 @@ class _LoginWidgetState extends State<LoginWidget> {
   Widget build(BuildContext context) {
     return widget.asDialogWindow
         ? AlertDialog(
-            title: const Text('Введите мастер-пароль'),
+            title: Text(Strings.of(context).login),
             content: TextField(
               controller: _passCtrl,
               obscureText: true,
               autofocus: true,
               enabled: !_isLoading,
               decoration: InputDecoration(
-                labelText: 'Мастер-пароль',
+                labelText: Strings.of(context).loginLabel,
                 errorText: _error,
               ),
               onSubmitted: (_) => _submit(),
             ),
             actions: [
-              TextButton(onPressed: _submit, child: const Text('Войти')),
+              TextButton(
+                onPressed: _submit,
+                child: Text(Strings.of(context).signIn),
+              ),
               if (_isBiometricAvailable)
                 IconButton(
                   onPressed: _handleBiometricLogin,
@@ -79,7 +83,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                       autofocus: true,
                       enabled: !_isLoading,
                       decoration: InputDecoration(
-                        labelText: 'Мастер-пароль',
+                        labelText: Strings.of(context).loginLabel,
                         errorText: _error,
                       ),
                       onSubmitted: (_) => _submit(),
@@ -93,7 +97,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                             children: [
                               ElevatedButton(
                                 onPressed: _submit,
-                                child: const Text('Войти'),
+                                child: Text(Strings.of(context).signIn),
                               ),
                               if (_isBiometricAvailable)
                                 IconButton(
@@ -117,7 +121,6 @@ class _LoginWidgetState extends State<LoginWidget> {
 
   Future<void> _checkBiometricAvailability() async {
     try {
-      await AppSettings.load();
       final isAvaildable = await _biometricAuth.isBiometricsAvailable();
       setState(() {
         _isBiometricAvailable = isAvaildable && AppSettings.biometricsEnabled;
@@ -132,7 +135,7 @@ class _LoginWidgetState extends State<LoginWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Слишком много неудачных попыток'),
+            content: Text(Strings.of(context).attempsErrorMessage),
             backgroundColor: Colors.red,
           ),
         );
@@ -172,7 +175,7 @@ class _LoginWidgetState extends State<LoginWidget> {
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Не удалось подтвердить личность'),
+              content: Text(Strings.of(context).notAuthenticatedMessage),
               backgroundColor: Colors.red,
             ),
           );
@@ -181,7 +184,10 @@ class _LoginWidgetState extends State<LoginWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(Strings.of(context).errorMsg(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -198,14 +204,14 @@ class _LoginWidgetState extends State<LoginWidget> {
         lockoutTime,
       ).difference(DateTime.now());
 
-      final text = remainingTime.inMinutes <= 0
-          ? '${remainingTime.inSeconds} сек.'
-          : '${remainingTime.inMinutes} мин.';
-
       if (mounted) {
+        final text = remainingTime.inMinutes <= 0
+            ? '${remainingTime.inSeconds} ${Strings.of(context).secondsPrefix}'
+            : '${remainingTime.inMinutes} ${Strings.of(context).minutesPrefix}';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Доступ заблокирован на $text'),
+            content: Text(Strings.of(context).lockoutMessage(text)),
             backgroundColor: Colors.red,
           ),
         );
@@ -218,7 +224,7 @@ class _LoginWidgetState extends State<LoginWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Слишком много неудачных попыток'),
+            content: Text(Strings.of(context).attempsErrorMessage),
             backgroundColor: Colors.red,
           ),
         );
@@ -229,7 +235,7 @@ class _LoginWidgetState extends State<LoginWidget> {
     String password = _passCtrl.text.trim();
     if (password.isEmpty) {
       setState(() {
-        _error = 'Введите мастер-пароль';
+        _error = Strings.of(context).loginTitle;
       });
       return;
     }
@@ -272,7 +278,7 @@ class _LoginWidgetState extends State<LoginWidget> {
           await _showLockoutMessage();
         }
         setState(() {
-          _error = 'Неверный мастер-пароль';
+          _error = Strings.of(context).invalidPasswordError;
         });
       }
     } catch (e) {
@@ -290,14 +296,17 @@ class _LoginWidgetState extends State<LoginWidget> {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          title: Text('Введите мастер-пароль'),
+          title: Text(Strings.of(context).loginTitle),
           content: TextField(controller: controller, obscureText: true),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Отмена'),
+              child: Text(Strings.of(context).cancel),
             ),
-            TextButton(onPressed: _submit, child: Text('Ok')),
+            TextButton(
+              onPressed: _submit,
+              child: Text(Strings.of(context).apply),
+            ),
           ],
         );
       },

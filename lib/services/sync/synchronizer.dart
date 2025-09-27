@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:safebox/models/password_item.dart';
-import 'package:safebox/services/security/crypto_manager.dart';
-import 'package:safebox/services/security/password_storage.dart';
-import 'package:safebox/services/sync/items_merger.dart';
-import 'package:safebox/services/sync/message.dart';
-import 'package:safebox/services/sync/sync_state.dart';
+import '../../models/password_item.dart';
+import '../security/crypto_manager.dart';
+import '../security/password_storage.dart';
+import 'items_merger.dart';
+import 'message.dart';
+import 'sync_state.dart';
 
 class Synchronizer {
   static const int port = 1409;

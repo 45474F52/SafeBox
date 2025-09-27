@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:safebox/services/export_import_passwords/i_exporter_importer.dart';
-import 'package:safebox/models/yandex_password_entry.dart';
-import 'package:safebox/services/helpers/csv_provider.dart';
+import '../../models/yandex_password_entry.dart';
+import '../helpers/csv_provider.dart';
+import 'i_exporter_importer.dart';
 
 class YandexExporterImporter implements IExporterImporter<YandexPasswordEntry> {
   static const _csvHeaders = ['url', 'username', 'password', 'comment', 'tags'];

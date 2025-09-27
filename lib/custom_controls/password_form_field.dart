@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/strings.dart';
+import '../services/passwords/password_generator.dart';
 
 class PasswordFormField extends StatefulWidget {
   final TextEditingController? controller;
@@ -11,6 +13,7 @@ class PasswordFormField extends StatefulWidget {
 }
 
 class _PasswordFormFieldState extends State<PasswordFormField> {
+  final _passGen = PasswordGenerator();
   late final TextEditingController _controller;
   bool _isObscured = true;
 
@@ -34,12 +37,19 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
       controller: _controller,
       obscureText: _isObscured,
       decoration: InputDecoration(
-        labelText: 'Пароль',
-        hintText: 'Введите пароль',
+        labelText: Strings.of(context).password,
+        hintText: Strings.of(context).enterPassword,
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Кнопка: Показать/скрыть
+            IconButton(
+              icon: const Icon(Icons.key),
+              onPressed: () {
+                _generatePassword();
+              },
+              tooltip: Strings.of(context).generate,
+            ),
+
             IconButton(
               icon: Icon(_isObscured ? Icons.visibility_off : Icons.visibility),
               onPressed: () {
@@ -47,17 +57,18 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
                   _isObscured = !_isObscured;
                 });
               },
-              tooltip: _isObscured ? 'Показать пароль' : 'Скрыть пароль',
+              tooltip: _isObscured
+                  ? Strings.of(context).showPassword
+                  : Strings.of(context).hidePassword,
             ),
 
-            // Кнопка: Скопировать
             IconButton(
               icon: const Icon(Icons.content_copy),
               onPressed: () async {
                 if (_controller.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Поле пустое'),
+                    SnackBar(
+                      content: Text(Strings.of(context).emptyFieldError),
                       duration: Duration(seconds: 1),
                     ),
                   );
@@ -68,26 +79,42 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
 
                 await Clipboard.setData(ClipboardData(text: _controller.text));
 
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Пароль скопирован'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                if (context.mounted) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(Strings.of(context).passwordCopied),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
 
                 FocusManager.instance.primaryFocus?.unfocus();
               },
-              tooltip: 'Скопировать пароль',
+              tooltip: Strings.of(context).copy,
             ),
           ],
         ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Введите пароль';
+          return Strings.of(context).enterPassword;
         }
         return null;
       },
     );
+  }
+
+  void _generatePassword() {
+    try {
+      _controller.text = _passGen.generate();
+    } on ArgumentError {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(Strings.of(context).selectLeastOneCharError),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.yellow,
+        ),
+      );
+    }
   }
 }

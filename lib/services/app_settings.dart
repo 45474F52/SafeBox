@@ -1,16 +1,22 @@
+import 'package:flutter/material.dart';
+import 'package:safebox/l10n/app_locales.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AppSettings {
+abstract class AppSettings {
   static final _prefs = SharedPreferencesAsync();
 
   static const _biometricsKey = 'sb_prefs_biometrics';
   static const _autolockKey = 'sb_prefs_autolock';
   static const _autolockTimeKey = 'sb_prefs_autolocktime';
+  static const _themeModeKey = 'sb_prefs_thememode';
+  static const _localeKey = 'sb_prefs_locale';
 
   static Future<void> load() async {
     _biometricsEnabled = await getBiometricsEnabled();
     _autolockEnabled = await getAutolockEnabled();
     _autolockTime = await getAutolockTime();
+    _themeMode = await getThemeMode();
+    _locale = await getLocale();
   }
 
   static Future<bool> getBiometricsEnabled() async =>
@@ -28,11 +34,36 @@ class AppSettings {
   static Future<void> setAutolockTime(String value) async =>
       await _prefs.setString(_autolockTimeKey, value);
 
+  static Future<ThemeMode> getThemeMode() async =>
+      ThemeMode.values[await _prefs.getInt(_themeModeKey) ?? 0];
+  static Future<void> setThemeMode(ThemeMode mode) async =>
+      await _prefs.setInt(_themeModeKey, mode.index);
+
+  static Future<Locale> getLocale() async {
+    final localeString = await _prefs.getStringList(_localeKey);
+    final language = localeString?.first;
+    final country = localeString?.last;
+    if (language != null && country != null) {
+      return Locale(language, country.isEmpty ? null : country);
+    }
+    return AppLocales.defaultLocale;
+  }
+
+  static Future<void> setLocale(Locale locale) async {
+    final language = locale.languageCode;
+    final country = locale.countryCode ?? '';
+    await _prefs.setStringList(_localeKey, [language, country]);
+  }
+
   static late bool _biometricsEnabled;
   static late bool _autolockEnabled;
   static late String? _autolockTime;
+  static late ThemeMode _themeMode;
+  static late Locale _locale;
 
   static bool get biometricsEnabled => _biometricsEnabled;
   static bool get autolockEnabled => _autolockEnabled;
   static String? get autolockTime => _autolockTime;
+  static ThemeMode get themeMode => _themeMode;
+  static Locale get locale => _locale;
 }

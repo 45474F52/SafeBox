@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:safebox/custom_controls/login_widget.dart';
+import '../custom_controls/login_widget.dart';
 
 class InactivityManagerSingleton {
   static final InactivityManagerSingleton _instance =

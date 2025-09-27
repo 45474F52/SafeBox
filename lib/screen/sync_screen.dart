@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:safebox/custom_controls/base_screen.dart';
-import 'package:safebox/services/sync/discoverer.dart';
-import 'package:safebox/services/sync/synchronizer.dart';
+import '../l10n/strings.dart';
+import '../custom_controls/base_screen.dart';
+import '../services/sync/discoverer.dart';
+import '../services/sync/synchronizer.dart';
 
 class SyncScreen extends BaseScreen<SyncScreen> {
   final Synchronizer synchronizer;
@@ -44,7 +45,10 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
           _devices = [];
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(Strings.of(context).errorMsg(e)),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -59,7 +63,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Поиск устройств')),
+      appBar: AppBar(title: Text(Strings.of(context).discoverDevices)),
       body: activityDetection(
         Column(
           children: [
@@ -80,7 +84,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
                             ),
                           )
                         : const Icon(Icons.search),
-                    label: const Text('Обнаружить'),
+                    label: Text(Strings.of(context).discover),
                     onPressed: _isDiscover
                         ? null
                         : () async {
@@ -92,7 +96,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
 
                   TextButton.icon(
                     icon: const Icon(Icons.stop),
-                    label: const Text('Стоп'),
+                    label: Text(Strings.of(context).stop),
                     onPressed: !_isDiscover ? null : _stopDiscover,
                   ),
                 ],
@@ -103,10 +107,10 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
 
             Text(
               _isDiscover
-                  ? 'Поиск...'
+                  ? '${Strings.of(context).discover}...'
                   : _devices.isNotEmpty
-                  ? 'Найдено устройств: ${_devices.length}'
-                  : 'Устройства не обнаружены',
+                  ? Strings.of(context).discoveredCountMessage(_devices.length)
+                  : Strings.of(context).devicesNotFoundMsg,
               style: TextStyle(
                 fontSize: 14.0,
                 color: _isDiscover ? Colors.blue : Colors.grey,
@@ -125,15 +129,19 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
                     title: Text(_devices[index]),
                     trailing: IconButton(
                       icon: Icon(Icons.sync, color: Colors.green),
-                      tooltip: 'Начать синхронизацию с ${_devices[index]}',
+                      tooltip: Strings.of(
+                        context,
+                      ).startSyncWith(_devices[index]),
                       onPressed: () async {
                         try {
                           final targetIP = _devices[index];
                           await widget.synchronizer.initiateSyncWith(targetIP);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Пароли синхронизированы'),
+                              SnackBar(
+                                content: Text(
+                                  Strings.of(context).passwordsSynchronized,
+                                ),
                               ),
                             );
                           }
@@ -141,7 +149,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Ошибка синхронизации: $e'),
+                                content: Text(Strings.of(context).errorMsg(e)),
                                 backgroundColor: Colors.red,
                               ),
                             );

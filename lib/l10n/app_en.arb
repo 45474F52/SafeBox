@@ -1,0 +1,155 @@
+{
+    "@@locale": "en",
+    "language": "English",
+    "appName": "SafeBox",
+    "login": "Login",
+    "password": "Password",
+    "description": "Description",
+    "save": "Save",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "error": "Error",
+    "delete": "Delete",
+    "close": "Close",
+    "search": "Search",
+    "copy": "Copy",
+    "clear": "Clear",
+    "add": "Add",
+    "edit": "Edit",
+    "discover": "Discover",
+    "stop": "Stop",
+    "minutesPrefix": "min.",
+    "secondsPrefix": "sec.",
+    "piecesPrefix": "pcs.",
+    "errorMsg": "Error: {message}",
+    "@errorMsg": {
+        "description": "Enter error message",
+        "placeholders": {
+            "message": {}
+        }
+    },
+    "loginTitle": "Enter master-password",
+    "loginLabel": "Master-password",
+    "signIn": "Sign In",
+    "attempsErrorMessage": "Too many failed attempts",
+    "notAuthenticatedMessage": "Couldn't confirm identity",
+    "lockoutMessage": "Fccess is blocked for {message}",
+    "@lockoutMessage": {
+        "description": "Enter lockout duration",
+        "placeholders": {
+            "message": {}
+        }
+    },
+    "invalidPasswordError": "Invalid master password",
+    "loadingMsg": "Loading...",
+    "initMsg": "Initialization...",
+    "initError": "Initialization error",
+    "passwordsTab": "Passwords",
+    "generatorTab": "Generator",
+    "settingsTab": "Settings",
+    "othersCategory": "Others",
+    "removeQuestion": "Delete?",
+    "removePasswordQuestion": "Delete password for {url}?",
+    "@removePasswordQuestion": {
+        "description": "Enter url",
+        "placeholders": {
+            "url": {}
+        }
+    },
+    "filters": "Filters",
+    "showAll": "Show all",
+    "enterSearchQuery": "Enter search query",
+    "passwordCopied": "Password has been copied",
+    "generatorTabTitle": "Passwords generator",
+    "passwordLength": "Password length:",
+    "uppercase": "Uppercase",
+    "lowercase": "Lowercase",
+    "numbers": "Numbers",
+    "symbols": "Sybmols",
+    "excludeAmbigious": "Exclude ambigious (0,O,l,1)",
+    "generate": "Generate",
+    "generatedPassword": "Generated password:",
+    "passphraseGenTitle": "Password phrase generator",
+    "passphraseCopied": "Password phrase has been copied",
+    "wordsCount": "Words count:",
+    "addYourWord": "Add your word",
+    "yourWords": "Your words:",
+    "generatedPassphrase": "Generated password phrase:",
+    "appSettingsTitle": "App settings",
+    "safety": "Safety",
+    "biometrics": "Biometrics",
+    "biometricsUnlock": "Face or fingerprint unlock",
+    "autolock": "Autolock",
+    "idleBlock": "Block application when idle",
+    "timeBeforeBlocking": "Time before blocking",
+    "storage": "Storage",
+    "synchronization": "Synchronization",
+    "forceSync": "Force synchronization of passwords",
+    "exportImport": "Export/Import",
+    "clearData": "Clear data",
+    "aboutApp": "About app",
+    "version": "Version",
+    "developer": "Developer",
+    "license": "License",
+    "clearAllQuestion": "⚠️ Clear all?",
+    "clearAllQuestionDescription": "All saved passwords will be permanently deleted. Are you sure?",
+    "allDataCleared": "✅ All data cleared",
+    "enterPassword": "Enter password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "emptyFieldError": "Empty field",
+    "addTag": "Add tag",
+    "loginIsRequiredError": "Login is required",
+    "fileSaved": "The file was saved successfully",
+    "selectFileForImport": "Select file for import",
+    "dataImported": "Data was successfully imported",
+    "exportPasswords": "Export passwords",
+    "importPasswords": "Import passwords",
+    "selectedFileMessage": "File is selected: {file}",
+    "@selectedFileMessage": {
+        "description": "Enter selected file path",
+        "placeholders": {
+            "file": {}
+        }
+    },
+    "securityStatsTitle": "Password Security Statistics",
+    "noDataError": "No data",
+    "statsSummaryMessage": "Passwords analyzed {totalCount}\nNon-secure passwords: {weakCount}",
+    "@statsSummaryMessage": {
+        "description": "Enter total count of passwords and count of weak passwords",
+        "placeholders": {
+            "totalCount": {},
+            "weakCount": {}
+        }
+    },
+    "veryWeakLevelText": "Extremely unreliable password.\nYou need to increase the length and add special characters",
+    "weakLevelText": "Weak password.\nAdd special characters and letters in different registers",
+    "moderateLevelText": "Average reliability.\nIt is recommended to increase the length to 16+ characters",
+    "strongLevelText": "A strong password.\nContains all types of characters",
+    "veryStrongLevelText": "Great password!\nMeets all safety requirements",
+    "discoverDevices": "Discover devices",
+    "searchMsg": "Discover...",
+    "discoveredCountMessage": "Devices found: {count}",
+    "@discoveredCountMessage": {
+        "description": "Enter discovered count",
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "devicesNotFoundMsg": "Devices not found",
+    "startSyncWith": "Start synchronization with {device}",
+    "@startSyncWith": {
+        "description": "Enter device IP to sync with",
+        "placeholders": {
+            "device": {}
+        }
+    },
+    "passwordsSynchronized": "Passwords was synchronized",
+    "selectLeastOneCharError": "Select at least one character type",
+    "personalizationSettings": "Personalization",
+    "languageSettings": "App language",
+    "themeSettings": "App theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark"
+}

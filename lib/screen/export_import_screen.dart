@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:safebox/custom_controls/base_screen.dart';
-import 'package:safebox/services/export_import_passwords/yandex_entries_converter.dart';
-import 'package:safebox/services/export_import_passwords/yandex_exporter_importer.dart';
-import 'package:safebox/services/security/password_storage.dart';
+import '../l10n/strings.dart';
+import '../custom_controls/base_screen.dart';
+import '../services/export_import_passwords/yandex_entries_converter.dart';
+import '../services/export_import_passwords/yandex_exporter_importer.dart';
+import '../services/security/password_storage.dart';
 
 class ExportImportScreen extends BaseScreen<ExportImportScreen> {
   final PasswordStorage storage;
@@ -37,13 +38,13 @@ class _ExportImportScreenState extends BaseScreenState<ExportImportScreen> {
       final data = await _provider.export(entries);
       await _provider.saveFile(data, _filename);
       setState(() {
-        _exported = 'Файл успешно сохранён';
+        _exported = Strings.of(context).fileSaved;
       });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Ошибка при экспорте: $e'),
+            content: Text(Strings.of(context).errorMsg(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -58,9 +59,9 @@ class _ExportImportScreenState extends BaseScreenState<ExportImportScreen> {
   Future<void> _importData() async {
     if (_selectedFile == null || _selectedFile!.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Выберите файл для импорта')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(Strings.of(context).selectFileForImport)),
+        );
       }
       return;
     }
@@ -75,15 +76,15 @@ class _ExportImportScreenState extends BaseScreenState<ExportImportScreen> {
       final passwords = _converter.convertTo(entries);
       await widget.storage.save(passwords);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Данные успешно импортированы')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(Strings.of(context).dataImported)),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка при импорте: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(Strings.of(context).errorMsg(e))),
+        );
       }
     } finally {
       setState(() {
@@ -108,7 +109,7 @@ class _ExportImportScreenState extends BaseScreenState<ExportImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Экспорт/Импорт')),
+      appBar: AppBar(title: Text(Strings.of(context).exportImport)),
       body: activityDetection(
         Padding(
           padding: EdgeInsets.all(16.0),
@@ -117,22 +118,24 @@ class _ExportImportScreenState extends BaseScreenState<ExportImportScreen> {
             children: [
               ElevatedButton(
                 onPressed: _exportData,
-                child: Text('Экспортировать пароли'),
+                child: Text(Strings.of(context).exportPasswords),
               ),
               SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: _pickFile,
-                child: Text('Выбрать файл для импорта'),
+                child: Text(Strings.of(context).selectFileForImport),
               ),
               if (_selectedFile != null && _selectedFile!.isNotEmpty)
                 Text(
-                  'Выбран файл: ${_selectedFile!.split('/').last}',
+                  Strings.of(
+                    context,
+                  ).selectedFileMessage(_selectedFile!.split('/').last),
                   style: TextStyle(color: Colors.blueGrey),
                 ),
               SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: _importData,
-                child: Text('Импортировать пароли'),
+                child: Text(Strings.of(context).importPasswords),
               ),
               SizedBox(height: 16.0),
               if (_exported.isNotEmpty)

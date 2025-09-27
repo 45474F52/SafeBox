@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:math';
 
-import 'package:safebox/screen/passphrase_generator_screen.dart';
+import '../l10n/strings.dart';
+import '../screen/passphrase_generator_screen.dart';
+import '../services/passwords/password_generator.dart';
 
 class PasswordGeneratorTab extends StatefulWidget {
   const PasswordGeneratorTab({super.key});
@@ -12,64 +13,38 @@ class PasswordGeneratorTab extends StatefulWidget {
 }
 
 class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
-  static const _minLength = 8;
-  static const _maxLength = 32;
-  int _length = 12;
-  bool _includeUppercase = true;
-  bool _includeLowercase = true;
-  bool _includeNumbers = true;
-  bool _includeSymbols = true;
-  bool _excludeAmbiguous = false;
+  final _passGen = PasswordGenerator();
 
-  String _generatedPassword = 'Нажмите "Сгенерировать"';
-
-  final String _uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  final String _lowercase = 'abcdefghijklmnopqrstuvwxyz';
-  final String _numbers = '0123456789';
-  final String _symbols = '!@#\$%^&*()_+-={}|;:,.<>?';
+  String _generatedPassword = '';
 
   void _generatePassword() {
-    String chars = '';
-    if (_includeUppercase) chars += _uppercase;
-    if (_includeLowercase) chars += _lowercase;
-    if (_includeNumbers) chars += _numbers;
-    if (_includeSymbols) chars += _symbols;
-
-    if (chars.isEmpty) {
+    try {
+      final password = _passGen.generate();
       setState(() {
-        _generatedPassword = 'Выберите хотя бы один тип символов';
+        _generatedPassword = password;
       });
-      return;
+    } on ArgumentError {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(Strings.of(context).selectLeastOneCharError),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.yellow,
+        ),
+      );
     }
-
-    if (_excludeAmbiguous) {
-      chars = chars.replaceAll(RegExp(r'[0O1lI]'), '');
-      if (chars.isEmpty) chars = _lowercase;
-    }
-
-    final random = Random();
-    String password = List.generate(_length, (index) {
-      return chars[random.nextInt(chars.length)];
-    }).join();
-
-    setState(() {
-      _generatedPassword = password;
-    });
   }
 
   Future<void> _copyToClipboard() async {
-    if (_generatedPassword.contains('Нажмите') ||
-        _generatedPassword.contains('Выберите')) {
-      return;
-    }
-    await Clipboard.setData(ClipboardData(text: _generatedPassword));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Пароль скопирован'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+    if (_generatedPassword.isNotEmpty) {
+      await Clipboard.setData(ClipboardData(text: _generatedPassword));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(Strings.of(context).passwordCopied),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
     }
   }
 
@@ -84,21 +59,22 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
           children: [
             Icon(Icons.vpn_key, size: 64, color: primary),
             const SizedBox(height: 16),
-            const Text(
-              'Генератор паролей',
+            Text(
+              Strings.of(context).generatorTabTitle,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
 
-            const Text('Длина пароля:'),
+            Text(Strings.of(context).passwordLength),
             Slider(
-              value: _length.toDouble(),
-              min: _minLength.toDouble(),
-              max: _maxLength.toDouble(),
+              value: _passGen.length.toDouble(),
+              min: PasswordGenerator.minLength.toDouble(),
+              max: PasswordGenerator.maxLength.toDouble(),
               divisions: 24,
-              label: _length.toString(),
-              onChanged: (value) => setState(() => _length = value.round()),
+              label: _passGen.length.toString(),
+              onChanged: (value) =>
+                  setState(() => _passGen.length = value.round()),
             ),
 
             Wrap(
@@ -106,29 +82,29 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
               runSpacing: 8,
               children: [
                 _buildCheckbox(
-                  'Заглавные',
-                  _includeUppercase,
-                  (v) => setState(() => _includeUppercase = v ?? true),
+                  Strings.of(context).uppercase,
+                  _passGen.includeUppercase,
+                  (v) => setState(() => _passGen.includeUppercase = v ?? true),
                 ),
                 _buildCheckbox(
-                  'Строчные',
-                  _includeLowercase,
-                  (v) => setState(() => _includeLowercase = v ?? true),
+                  Strings.of(context).lowercase,
+                  _passGen.includeLowercase,
+                  (v) => setState(() => _passGen.includeLowercase = v ?? true),
                 ),
                 _buildCheckbox(
-                  'Цифры',
-                  _includeNumbers,
-                  (v) => setState(() => _includeNumbers = v ?? true),
+                  Strings.of(context).numbers,
+                  _passGen.includeNumbers,
+                  (v) => setState(() => _passGen.includeNumbers = v ?? true),
                 ),
                 _buildCheckbox(
-                  'Символы',
-                  _includeSymbols,
-                  (v) => setState(() => _includeSymbols = v ?? true),
+                  Strings.of(context).symbols,
+                  _passGen.includeSymbols,
+                  (v) => setState(() => _passGen.includeSymbols = v ?? true),
                 ),
                 _buildCheckbox(
-                  'Исключить похожие (0,O,l,1)',
-                  _excludeAmbiguous,
-                  (v) => setState(() => _excludeAmbiguous = v ?? false),
+                  Strings.of(context).excludeAmbigious,
+                  _passGen.excludeAmbiguous,
+                  (v) => setState(() => _passGen.excludeAmbiguous = v ?? false),
                 ),
               ],
             ),
@@ -139,8 +115,8 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
               child: ElevatedButton.icon(
                 onPressed: _generatePassword,
                 icon: const Icon(Icons.autorenew),
-                label: const Text(
-                  'Сгенерировать',
+                label: Text(
+                  Strings.of(context).generate,
                   style: TextStyle(fontSize: 18.0),
                 ),
               ),
@@ -148,7 +124,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
 
             const SizedBox(height: 24),
 
-            const Text('Сгенерированный пароль:'),
+            Text(Strings.of(context).generatedPassword),
             const SizedBox(height: 8),
             Card(
               elevation: 2,
@@ -171,7 +147,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
               child: TextButton.icon(
                 onPressed: _copyToClipboard,
                 icon: const Icon(Icons.copy, size: 16),
-                label: const Text('Копировать'),
+                label: Text(Strings.of(context).copy),
               ),
             ),
             const SizedBox(height: 8.0),
@@ -187,7 +163,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
                   );
                 },
                 icon: Icon(Icons.text_snippet),
-                label: Text('Генератор парольных фраз'),
+                label: Text(Strings.of(context).passphraseGenTitle),
               ),
             ),
           ],
