@@ -26,11 +26,11 @@ class YandexExporterImporter implements IExporterImporter<YandexPasswordEntry> {
   }
 
   @override
-  Future<void> saveFile(String data, String filename) async {
+  Future<String> saveFile(String data, String filename) async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}${Platform.pathSeparator}$filename');
-    print(file.path);
     await file.writeAsString(data);
+    return file.path;
   }
 
   @override

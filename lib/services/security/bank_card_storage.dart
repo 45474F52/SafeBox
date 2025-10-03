@@ -2,34 +2,31 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:safebox/models/bank_card.dart';
 import 'package:safebox/services/log/logger.dart';
-import 'package:safebox/services/notifications/system_notifications_service.dart';
-import 'package:safebox/services/passwords/strength/password_security_checker.dart';
-import 'package:safebox/services/passwords/strength/strength_level.dart';
-import '../../models/password_item.dart';
 import 'encryptor.dart';
 import 'salt_provider.dart';
 
-final class PasswordStorage {
-  static const _log = Logger('PasswordStorage');
-  static const String _fileName = 'sbpf.enc';
+final class BankCardStorage {
+  static const _log = Logger('BankCardStorage');
+  static const String _fileName = 'sbbcf.enc';
   static const _deleteTimeout = Duration(days: 30);
 
-  late final File _passwords;
+  late final File _cards;
   late final Encryptor _encryptor;
 
-  Directory get fileDir => _passwords.parent;
+  Directory get fileDir => _cards.parent;
 
-  static Future<PasswordStorage> create(String master) async {
+  static Future<BankCardStorage> create(String master) async {
     final salt = SaltProvider.getSalt();
     final encryptor = Encryptor(master, salt);
     final file = await _initializeFile();
-    final ps = PasswordStorage._(encryptor, file);
+    final ps = BankCardStorage._(encryptor, file);
     await ps.cleanExpired();
     return ps;
   }
 
-  PasswordStorage._(this._encryptor, this._passwords);
+  BankCardStorage._(this._encryptor, this._cards);
 
   static Future<File> _initializeFile() async {
     final appDir = await getApplicationDocumentsDirectory();
@@ -40,46 +37,39 @@ final class PasswordStorage {
     return file;
   }
 
-  Future<void> _checkAndUpdateNotifications() async {
-    await SystemNotificationsService.cancelAll();
-    await SystemNotificationsService.scheduleDailyNotification(this);
-  }
-
-  Future<List<PasswordItem>> load() async {
+  Future<List<BankCard>> load() async {
     final encryptedData = await _readFile();
     final data = _encryptor.decryptData(encryptedData);
     if (data == null || data.isEmpty) {
       return [];
     }
     final List<dynamic> jsonList = jsonDecode(data);
-    return jsonList.map((item) => PasswordItem.fromJSON(item)).toList();
+    return jsonList.map((item) => BankCard.fromJSON(item)).toList();
   }
 
-  Future<List<PasswordItem>> loadActive() async {
+  Future<List<BankCard>> loadActive() async {
     final items = await load();
     return items.where((item) => item.deletedAt == null).toList();
   }
 
-  Future<void> save(List<PasswordItem> items) async {
+  Future<void> save(List<BankCard> items) async {
     final jsonString = jsonEncode(items.map((item) => item.toJSON()).toList());
     final String encryptedData = _encryptor.encryptData(jsonString);
-    await _passwords.writeAsString(encryptedData);
+    await _cards.writeAsString(encryptedData);
   }
 
-  Future<void> addItem(PasswordItem item) async {
+  Future<void> addItem(BankCard item) async {
     final items = await load();
     items.add(item);
     await save(items);
-    await _checkAndUpdateNotifications();
   }
 
-  Future<void> updateItem(PasswordItem item) async {
+  Future<void> updateItem(BankCard item) async {
     final items = await load();
     final index = items.indexOf(item);
     if (index >= 0) {
       items[index] = item.copyWith(updatedAt: DateTime.now());
       await save(items);
-      await _checkAndUpdateNotifications();
     }
   }
 
@@ -113,23 +103,15 @@ final class PasswordStorage {
   }
 
   Future<void> clear() async {
-    if (await _passwords.exists()) {
-      await _passwords.delete();
+    if (await _cards.exists()) {
+      await _cards.delete();
     }
   }
 
   Future<String> _readFile() async {
-    if (!await _passwords.exists()) {
+    if (!await _cards.exists()) {
       return '';
     }
-    return await _passwords.readAsString();
-  }
-
-  Future<bool> needUpdateAny() async {
-    final items = await loadActive();
-    return items.any((item) {
-      final level = PasswordSecurityChecker.check(item.password);
-      return level == StrengthLevel.veryWeak || level == StrengthLevel.weak;
-    });
+    return await _cards.readAsString();
   }
 }

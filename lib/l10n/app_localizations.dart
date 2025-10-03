@@ -230,6 +230,12 @@ abstract class AppLocalizations {
   /// **'Error: {message}'**
   String errorMsg(Object message);
 
+  /// Enter unnecessary state
+  ///
+  /// In en, this message translates to:
+  /// **'State \"{state}\" not supported'**
+  String notInCaseError(Object state);
+
   /// No description provided for @loginTitle.
   ///
   /// In en, this message translates to:
@@ -263,8 +269,8 @@ abstract class AppLocalizations {
   /// Enter lockout duration
   ///
   /// In en, this message translates to:
-  /// **'Fccess is blocked for {message}'**
-  String lockoutMessage(Object message);
+  /// **'Access is blocked for {message}'**
+  String lockoutMessage(String message);
 
   /// No description provided for @invalidPasswordError.
   ///
@@ -296,6 +302,12 @@ abstract class AppLocalizations {
   /// **'Passwords'**
   String get passwordsTab;
 
+  /// No description provided for @bankCardsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank cards'**
+  String get bankCardsTab;
+
   /// No description provided for @generatorTab.
   ///
   /// In en, this message translates to:
@@ -324,7 +336,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Delete password for {url}?'**
-  String removePasswordQuestion(Object url);
+  String removePasswordQuestion(String url);
+
+  /// Enter card number
+  ///
+  /// In en, this message translates to:
+  /// **'Delete card {number}?'**
+  String removeBankCardQuestion(String number);
 
   /// No description provided for @filters.
   ///
@@ -545,7 +563,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearAllQuestionDescription.
   ///
   /// In en, this message translates to:
-  /// **'All saved passwords will be permanently deleted. Are you sure?'**
+  /// **'All saved data will be permanently deleted. Are you sure?'**
   String get clearAllQuestionDescription;
 
   /// No description provided for @allDataCleared.
@@ -624,7 +642,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'File is selected: {file}'**
-  String selectedFileMessage(Object file);
+  String selectedFileMessage(String file);
 
   /// No description provided for @securityStatsTitle.
   ///
@@ -642,7 +660,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Passwords analyzed {totalCount}\nNon-secure passwords: {weakCount}'**
-  String statsSummaryMessage(Object totalCount, Object weakCount);
+  String statsSummaryMessage(int totalCount, int weakCount);
 
   /// No description provided for @veryWeakLevelText.
   ///
@@ -690,7 +708,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Devices found: {count}'**
-  String discoveredCountMessage(Object count);
+  String discoveredCountMessage(int count);
 
   /// No description provided for @devicesNotFoundMsg.
   ///
@@ -702,7 +720,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Start synchronization with {device}'**
-  String startSyncWith(Object device);
+  String startSyncWith(String device);
 
   /// No description provided for @passwordsSynchronized.
   ///
@@ -751,6 +769,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get themeDark;
+
+  /// Enter file path
+  ///
+  /// In en, this message translates to:
+  /// **'File saved to {path}'**
+  String savedToMessage(String path);
 }
 
 class _AppLocalizationsDelegate

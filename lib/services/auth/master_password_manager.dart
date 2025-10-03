@@ -1,8 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MasterPasswordManager {
+abstract final class MasterPasswordManager {
+  static const _key = 'mpwd_sb.enc';
   static final _storage = SharedPreferencesAsync();
-  static final _key = 'mpwd_sb.enc';
 
   static Future<void> save(String password) async =>
       await _storage.setString(_key, password);

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:safebox/models/taggable_item.dart';
 import '../l10n/strings.dart';
-import '../models/password_item.dart';
 
-class TagsInput extends StatefulWidget {
-  final PasswordItem item;
-  final Function(PasswordItem) onUpdate;
+class TagsInput<T extends TaggableItem> extends StatefulWidget {
+  final T item;
+  final void Function(T item) onUpdate;
 
   const TagsInput({super.key, required this.item, required this.onUpdate});
 
   @override
-  State<StatefulWidget> createState() => _TagsInputState();
+  State<TagsInput> createState() => _TagsInputState<T>();
 }
 
-class _TagsInputState extends State<TagsInput> {
+class _TagsInputState<T extends TaggableItem> extends State<TagsInput> {
   final _controller = TextEditingController();
 
   @override
@@ -35,7 +35,7 @@ class _TagsInputState extends State<TagsInput> {
           }).toList(),
         ),
 
-        if (widget.item.tagList.length < PasswordItem.maxTagsCount)
+        if (widget.item.tagList.length < widget.item.maxTagsCount)
           TextField(
             controller: _controller,
             maxLength: 16,
@@ -58,6 +58,7 @@ class _TagsInputState extends State<TagsInput> {
               if (value.isNotEmpty) {
                 widget.item.addTag(value);
                 widget.onUpdate(widget.item);
+                widget.onUpdate(widget.item as T);
                 setState(() {});
                 _controller.clear();
               }

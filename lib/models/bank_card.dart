@@ -4,34 +4,37 @@ import 'package:safebox/models/i_synchronizable.dart';
 import 'package:safebox/models/taggable_item.dart';
 import 'package:uuid/uuid.dart';
 
-class PasswordItem extends TaggableItem implements ISynchronizable {
+class BankCard extends TaggableItem implements ISynchronizable {
   final String id;
-  final String login;
-  final String password;
-  final String url;
+  final String number;
+  final DateTime validityPeriod;
+  final String owner;
+  final String title;
   final String description;
   final DateTime updatedAt;
   final DateTime? deletedAt;
 
-  PasswordItem._(
+  BankCard._(
     this.id,
-    this.login,
-    this.password,
-    this.url,
+    this.number,
+    this.validityPeriod,
+    this.owner,
+    this.title,
     this.description,
     String tags,
     this.updatedAt,
     this.deletedAt,
   ) : super(tags);
 
-  factory PasswordItem.nullObject() =>
-      PasswordItem._('', '', '', '', '', '', DateTime.now(), null);
+  factory BankCard.nullObject() =>
+      BankCard._('', '', DateTime.now(), '', '', '', '', DateTime.now(), null);
 
-  PasswordItem({
+  BankCard({
     String? id,
-    required this.login,
-    required this.password,
-    required this.url,
+    required this.number,
+    required this.validityPeriod,
+    required this.owner,
+    required this.title,
     required this.description,
     required String tags,
     DateTime? updatedAt,
@@ -40,27 +43,27 @@ class PasswordItem extends TaggableItem implements ISynchronizable {
        this.updatedAt = updatedAt ?? DateTime.now(),
        super(tags);
 
-  factory PasswordItem.fromJSON(Map<String, dynamic> json) {
-    return PasswordItem(
-      id: json['id'] as String,
-      login: json['login'] as String,
-      password: json['password'] as String,
-      url: json['url'] as String,
-      description: json['description'] as String,
-      tags: json['tags'] as String,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      deletedAt: DateTime.tryParse(
-        json['deleted_at'] == null ? '' : json['deleted_at'] as String,
-      ),
+  factory BankCard.fromJSON(Map<String, dynamic> json) {
+    return BankCard(
+      id: json['id'],
+      number: json['number'],
+      validityPeriod: DateTime.parse(json['validity_period']),
+      owner: json['owner'],
+      title: json['title'],
+      description: json['description'],
+      tags: json['tags'],
+      updatedAt: DateTime.parse(json['updated_at']),
+      deletedAt: DateTime.tryParse(json['deleted_at'] ?? ''),
     );
   }
 
   Map<String, dynamic> toJSON() {
     return {
       'id': id,
-      'login': login,
-      'password': password,
-      'url': url,
+      'number': number,
+      'validity_period': validityPeriod.toIso8601String(),
+      'owner': owner,
+      'title': title,
       'description': description,
       'tags': tags,
       'updated_at': updatedAt.toIso8601String(),
@@ -68,21 +71,23 @@ class PasswordItem extends TaggableItem implements ISynchronizable {
     };
   }
 
-  PasswordItem copyWith({
+  BankCard copyWith({
     String? id,
-    String? login,
-    String? password,
-    String? url,
+    String? number,
+    DateTime? validityPeriod,
+    String? owner,
+    String? title,
     String? description,
     String? tags,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) {
-    return PasswordItem(
+    return BankCard(
       id: id ?? this.id,
-      login: login ?? this.login,
-      password: password ?? this.password,
-      url: url ?? this.url,
+      number: number ?? this.number,
+      validityPeriod: validityPeriod ?? this.validityPeriod,
+      owner: owner ?? this.owner,
+      title: title ?? this.title,
       description: description ?? this.description,
       tags: tags ?? this.tags,
       updatedAt: updatedAt ?? DateTime.now(),
@@ -92,7 +97,7 @@ class PasswordItem extends TaggableItem implements ISynchronizable {
 
   @override
   bool operator ==(Object other) {
-    if (other is PasswordItem) {
+    if (other is BankCard) {
       return other.id == this.id;
     }
     return super == other;

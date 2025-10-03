@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:safebox/services/helpers/snackbar_provider.dart';
 
 import '../l10n/strings.dart';
 import '../screen/passphrase_generator_screen.dart';
@@ -13,6 +14,7 @@ class PasswordGeneratorTab extends StatefulWidget {
 }
 
 class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
+  late final _strings = Strings.of(context);
   final _passGen = PasswordGenerator();
 
   String _generatedPassword = '';
@@ -24,13 +26,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
         _generatedPassword = password;
       });
     } on ArgumentError {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Strings.of(context).selectLeastOneCharError),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.yellow,
-        ),
-      );
+      SnackBarProvider.showWarning(context, _strings.selectLeastOneCharError);
     }
   }
 
@@ -38,12 +34,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
     if (_generatedPassword.isNotEmpty) {
       await Clipboard.setData(ClipboardData(text: _generatedPassword));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Strings.of(context).passwordCopied),
-            duration: Duration(seconds: 1),
-          ),
-        );
+        SnackBarProvider.showSuccess(context, _strings.passwordCopied);
       }
     }
   }
@@ -60,13 +51,13 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
             Icon(Icons.vpn_key, size: 64, color: primary),
             const SizedBox(height: 16),
             Text(
-              Strings.of(context).generatorTabTitle,
+              _strings.generatorTabTitle,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
 
-            Text(Strings.of(context).passwordLength),
+            Text(_strings.passwordLength),
             Slider(
               value: _passGen.length.toDouble(),
               min: PasswordGenerator.minLength.toDouble(),
@@ -82,27 +73,27 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
               runSpacing: 8,
               children: [
                 _buildCheckbox(
-                  Strings.of(context).uppercase,
+                  _strings.uppercase,
                   _passGen.includeUppercase,
                   (v) => setState(() => _passGen.includeUppercase = v ?? true),
                 ),
                 _buildCheckbox(
-                  Strings.of(context).lowercase,
+                  _strings.lowercase,
                   _passGen.includeLowercase,
                   (v) => setState(() => _passGen.includeLowercase = v ?? true),
                 ),
                 _buildCheckbox(
-                  Strings.of(context).numbers,
+                  _strings.numbers,
                   _passGen.includeNumbers,
                   (v) => setState(() => _passGen.includeNumbers = v ?? true),
                 ),
                 _buildCheckbox(
-                  Strings.of(context).symbols,
+                  _strings.symbols,
                   _passGen.includeSymbols,
                   (v) => setState(() => _passGen.includeSymbols = v ?? true),
                 ),
                 _buildCheckbox(
-                  Strings.of(context).excludeAmbigious,
+                  _strings.excludeAmbigious,
                   _passGen.excludeAmbiguous,
                   (v) => setState(() => _passGen.excludeAmbiguous = v ?? false),
                 ),
@@ -116,7 +107,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
                 onPressed: _generatePassword,
                 icon: const Icon(Icons.autorenew),
                 label: Text(
-                  Strings.of(context).generate,
+                  _strings.generate,
                   style: TextStyle(fontSize: 18.0),
                 ),
               ),
@@ -124,7 +115,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
 
             const SizedBox(height: 24),
 
-            Text(Strings.of(context).generatedPassword),
+            Text(_strings.generatedPassword),
             const SizedBox(height: 8),
             Card(
               elevation: 2,
@@ -147,7 +138,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
               child: TextButton.icon(
                 onPressed: _copyToClipboard,
                 icon: const Icon(Icons.copy, size: 16),
-                label: Text(Strings.of(context).copy),
+                label: Text(_strings.copy),
               ),
             ),
             const SizedBox(height: 8.0),
@@ -163,7 +154,7 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
                   );
                 },
                 icon: Icon(Icons.text_snippet),
-                label: Text(Strings.of(context).passphraseGenTitle),
+                label: Text(_strings.passphraseGenTitle),
               ),
             ),
           ],

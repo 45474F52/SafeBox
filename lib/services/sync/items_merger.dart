@@ -1,7 +1,7 @@
-import '../../models/password_item.dart';
+import '../../models/i_synchronizable.dart';
 
 class ItemsMerger {
-  static void sync(List<PasswordItem> first, List<PasswordItem> second) {
+  static void sync<T extends ISynchronizable>(List<T> first, List<T> second) {
     if (second.isNotEmpty) {
       if (first.isEmpty) {
         first.addAll(second);
@@ -13,26 +13,26 @@ class ItemsMerger {
     }
   }
 
-  static List<PasswordItem> merge(
-    List<PasswordItem> first,
-    List<PasswordItem> second,
+  static List<T> merge<T extends ISynchronizable>(
+    List<T> first,
+    List<T> second,
   ) {
-    final Map<String, PasswordItem> map = {};
+    final Map<String, T> map = {};
 
     for (final item in first) {
-      map[item.id] = item;
+      map[item.identifier] = item;
     }
 
     for (final item in second) {
-      final existing = map[item.id];
+      final existing = map[item.identifier];
 
       if (existing == null) {
-        if (item.deletedAt == null) {
-          map[item.id] = item;
+        if (item.isDeleted) {
+          map[item.identifier] = item;
         }
       } else {
-        if (item.updatedAt.isAfter(existing.updatedAt)) {
-          map[item.id] = item;
+        if (item.lastUpdate.isAfter(existing.lastUpdate)) {
+          map[item.identifier] = item;
         }
       }
     }

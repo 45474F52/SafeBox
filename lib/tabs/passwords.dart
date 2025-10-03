@@ -15,6 +15,7 @@ class PasswordsTab extends StatefulWidget {
 }
 
 class _PasswordsTabState extends State<PasswordsTab> {
+  late final _strings = Strings.of(context);
   late Future<List<PasswordItem>> _itemsFuture;
   String _searchQuery = '';
   Map<String, bool> _filters = {};
@@ -32,8 +33,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
     _filters = {};
     if (mounted) {
       for (var item in items) {
-        final domain =
-            Uri.tryParse(item.url)?.host ?? Strings.of(context).othersCategory;
+        final domain = Uri.tryParse(item.url)?.host ?? _strings.othersCategory;
         _filters[domain] = true;
       }
     }
@@ -61,8 +61,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
 
     if (!_showAll) {
       items = items.where((item) {
-        final domain =
-            Uri.tryParse(item.url)?.host ?? Strings.of(context).othersCategory;
+        final domain = Uri.tryParse(item.url)?.host ?? _strings.othersCategory;
         return _filters[domain] ?? false;
       }).toList();
     }
@@ -115,7 +114,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
                   final items = snapshot.data ?? [];
                   return Text(
                     items.isNotEmpty
-                        ? '${items.length} ${Strings.of(context).piecesPrefix}'
+                        ? '${items.length} ${_strings.piecesPrefix}'
                         : '',
                   );
                 }
@@ -159,9 +158,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Text(Strings.of(context).errorMsg(snapshot.error!)),
-            );
+            return Center(child: Text(_strings.errorMsg(snapshot.error!)));
           }
 
           final items = snapshot.data ?? [];
@@ -176,10 +173,9 @@ class _PasswordsTabState extends State<PasswordsTab> {
 
               final currentDomain =
                   Uri.tryParse(currentItem.url)?.host ??
-                  Strings.of(context).othersCategory;
+                  _strings.othersCategory;
               final nextDomain = nextItem != null
-                  ? Uri.tryParse(nextItem.url)?.host ??
-                        Strings.of(context).othersCategory
+                  ? Uri.tryParse(nextItem.url)?.host ?? _strings.othersCategory
                   : null;
 
               if (nextDomain != currentDomain || index == items.length - 1) {
@@ -190,8 +186,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
             itemBuilder: (context, index) {
               final item = items[index];
               final currentDomain =
-                  Uri.tryParse(item.url)?.host ??
-                  Strings.of(context).othersCategory;
+                  Uri.tryParse(item.url)?.host ?? _strings.othersCategory;
 
               return LayoutBuilder(
                 builder: (context, constraints) {
@@ -280,7 +275,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
                           final confirmed = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text(Strings.of(context).removeQuestion),
+                              title: Text(_strings.removeQuestion),
                               content: Text(
                                 Strings.of(
                                   context,
@@ -290,11 +285,11 @@ class _PasswordsTabState extends State<PasswordsTab> {
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.pop(context, false),
-                                  child: Text(Strings.of(context).cancel),
+                                  child: Text(_strings.cancel),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  child: Text(Strings.of(context).delete),
+                                  child: Text(_strings.delete),
                                 ),
                               ],
                             ),
@@ -302,7 +297,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
 
                           if (confirmed == true) {
                             await widget.storage.markAsDeleted(item.id);
-                            _refresh();
+                            await _refresh();
                           }
                         },
                       ),
@@ -324,13 +319,13 @@ class _PasswordsTabState extends State<PasswordsTab> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: Text(Strings.of(context).filters),
+              title: Text(_strings.filters),
               content: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SwitchListTile(
-                      title: Text(Strings.of(context).showAll),
+                      title: Text(_strings.showAll),
                       value: _showAll,
                       onChanged: (value) {
                         setStateDialog(() {
@@ -357,7 +352,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
               ),
               actions: [
                 TextButton(
-                  child: Text(Strings.of(context).close),
+                  child: Text(_strings.close),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -373,12 +368,10 @@ class _PasswordsTabState extends State<PasswordsTab> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(Strings.of(context).search),
+          title: Text(_strings.search),
           content: TextField(
             autofocus: true,
-            decoration: InputDecoration(
-              hintText: Strings.of(context).enterSearchQuery,
-            ),
+            decoration: InputDecoration(hintText: _strings.enterSearchQuery),
             onChanged: (value) {
               setState(() {
                 _searchQuery = value;
@@ -388,7 +381,7 @@ class _PasswordsTabState extends State<PasswordsTab> {
           ),
           actions: [
             TextButton(
-              child: Text(Strings.of(context).close),
+              child: Text(_strings.close),
               onPressed: () => Navigator.pop(context),
             ),
           ],

@@ -1,4 +1,9 @@
-arb-dir: lib/l10n
+arb-dir: lib/l10n 
 template_arb-file: app_en.arb
-output_localization-files: app_localizations.dart
+output_localization-file: app_localizations.dart
+untranslated-messages-file: app_untranslated.txt
+output_class: AppLocalizations
+required-resource-attributes: false
 nullable-getter: false
+use-escaping: false
+use-named-parameters: false

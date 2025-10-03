@@ -1,6 +1,6 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 
-import 'package:safebox/services/passwords_strength/strength_level.dart';
+import 'package:safebox/services/passwords/strength/strength_level.dart';
 
 class PasswordSecurityChecker {
   static const _minLength = 8;

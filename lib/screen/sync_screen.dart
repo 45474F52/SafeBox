@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:safebox/services/helpers/snackbar_provider.dart';
 import '../l10n/strings.dart';
 import '../custom_controls/base_screen.dart';
 import '../services/sync/discoverer.dart';
@@ -13,6 +14,7 @@ class SyncScreen extends BaseScreen<SyncScreen> {
 }
 
 class _SyncScreenState extends BaseScreenState<SyncScreen> {
+  late final _strings = Strings.of(context);
   final _discoverer = Discoverer();
   bool _isDiscover = false;
   List<String> _devices = [];
@@ -44,12 +46,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
         setState(() {
           _devices = [];
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Strings.of(context).errorMsg(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackBarProvider.provideException(context, e);
       }
     } finally {
       if (mounted) {
@@ -63,7 +60,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(Strings.of(context).discoverDevices)),
+      appBar: AppBar(title: Text(_strings.discoverDevices)),
       body: activityDetection(
         Column(
           children: [
@@ -84,7 +81,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
                             ),
                           )
                         : const Icon(Icons.search),
-                    label: Text(Strings.of(context).discover),
+                    label: Text(_strings.discover),
                     onPressed: _isDiscover
                         ? null
                         : () async {
@@ -96,7 +93,7 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
 
                   TextButton.icon(
                     icon: const Icon(Icons.stop),
-                    label: Text(Strings.of(context).stop),
+                    label: Text(_strings.stop),
                     onPressed: !_isDiscover ? null : _stopDiscover,
                   ),
                 ],
@@ -107,10 +104,10 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
 
             Text(
               _isDiscover
-                  ? '${Strings.of(context).discover}...'
+                  ? '${_strings.discover}...'
                   : _devices.isNotEmpty
-                  ? Strings.of(context).discoveredCountMessage(_devices.length)
-                  : Strings.of(context).devicesNotFoundMsg,
+                  ? _strings.discoveredCountMessage(_devices.length)
+                  : _strings.devicesNotFoundMsg,
               style: TextStyle(
                 fontSize: 14.0,
                 color: _isDiscover ? Colors.blue : Colors.grey,
@@ -137,22 +134,14 @@ class _SyncScreenState extends BaseScreenState<SyncScreen> {
                           final targetIP = _devices[index];
                           await widget.synchronizer.initiateSyncWith(targetIP);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  Strings.of(context).passwordsSynchronized,
-                                ),
-                              ),
+                            SnackBarProvider.showSuccess(
+                              context,
+                              _strings.passwordsSynchronized,
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(Strings.of(context).errorMsg(e)),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
+                            SnackBarProvider.provideException(context, e);
                           }
                         }
                       },

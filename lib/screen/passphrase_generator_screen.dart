@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../custom_controls/base_screen.dart';
 import '../l10n/strings.dart';
+import '../services/helpers/snackbar_provider.dart';
 
 class PassphraseGeneratorScreen extends BaseScreen<PassphraseGeneratorScreen> {
   const PassphraseGeneratorScreen({super.key});
@@ -15,6 +16,7 @@ class PassphraseGeneratorScreen extends BaseScreen<PassphraseGeneratorScreen> {
 class _PassphraseGeneratorScreenState
     extends BaseScreenState<PassphraseGeneratorScreen> {
   static const _maxLength = 64;
+  late final _strings = Strings.of(context);
   int _wordCount = 4;
   String _generatedPhrase = '';
   List<String> _customWords = [];
@@ -81,21 +83,11 @@ class _PassphraseGeneratorScreenState
       try {
         await Clipboard.setData(ClipboardData(text: _generatedPhrase));
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(Strings.of(context).passphraseCopied),
-              duration: Duration(seconds: 1),
-            ),
-          );
+          SnackBarProvider.showSuccess(context, _strings.passphraseCopied);
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(Strings.of(context).errorMsg(e)),
-              backgroundColor: Colors.red,
-            ),
-          );
+          SnackBarProvider.provideException(context, e);
         }
       }
     }
@@ -104,14 +96,14 @@ class _PassphraseGeneratorScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(Strings.of(context).passphraseGenTitle)),
+      appBar: AppBar(title: Text(_strings.passphraseGenTitle)),
       body: activityDetection(
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(Strings.of(context).wordsCount),
+              Text(_strings.wordsCount),
               Slider(
                 value: _wordCount.toDouble(),
                 min: 2.0,
@@ -126,7 +118,7 @@ class _PassphraseGeneratorScreenState
               TextField(
                 controller: _wordController,
                 decoration: InputDecoration(
-                  labelText: Strings.of(context).addYourWord,
+                  labelText: _strings.addYourWord,
                   suffixIcon: IconButton(
                     onPressed: _addCustomWord,
                     icon: Icon(Icons.add),
@@ -138,12 +130,12 @@ class _PassphraseGeneratorScreenState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(Strings.of(context).yourWords),
+                  Text(_strings.yourWords),
                   TextButton.icon(
                     onPressed: () => setState(() {
                       _customWords.clear();
                     }),
-                    label: Text(Strings.of(context).clear),
+                    label: Text(_strings.clear),
                     icon: Icon(Icons.delete),
                   ),
                 ],
@@ -175,14 +167,14 @@ class _PassphraseGeneratorScreenState
                   onPressed: _generatePassphrase,
                   icon: Icon(Icons.autorenew),
                   label: Text(
-                    Strings.of(context).generate,
+                    _strings.generate,
                     style: TextStyle(fontSize: 18.0),
                   ),
                 ),
               ),
               const SizedBox(height: 24.0),
 
-              Text(Strings.of(context).generatedPassphrase),
+              Text(_strings.generatedPassphrase),
               const SizedBox(height: 8.0),
 
               Card(
@@ -205,7 +197,7 @@ class _PassphraseGeneratorScreenState
               Center(
                 child: TextButton.icon(
                   onPressed: _copyToClipboard,
-                  label: Text(Strings.of(context).copy),
+                  label: Text(_strings.copy),
                   icon: Icon(Icons.copy, size: 16.0),
                 ),
               ),

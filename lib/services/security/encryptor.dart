@@ -6,8 +6,11 @@ import 'package:pointycastle/digests/sha256.dart';
 import 'package:pointycastle/key_derivators/api.dart';
 import 'package:pointycastle/key_derivators/pbkdf2.dart';
 import 'package:pointycastle/macs/hmac.dart';
+import 'package:safebox/services/log/logger.dart';
 
-class Encryptor {
+final class Encryptor {
+  static const _log = Logger('Encryptor');
+
   late final encrypt.Key _key;
 
   Encryptor(String masterPassword, Uint8List salt) {
@@ -42,7 +45,7 @@ class Encryptor {
 
       return decrypted;
     } catch (e) {
-      print(e.toString());
+      _log.error(e.toString());
       return null;
     }
   }

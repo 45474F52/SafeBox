@@ -10,6 +10,8 @@ abstract class AppSettings {
   static const _autolockTimeKey = 'sb_prefs_autolocktime';
   static const _themeModeKey = 'sb_prefs_thememode';
   static const _localeKey = 'sb_prefs_locale';
+  static const _notificationsKey = 'sb_prefs_notifications';
+  static const _appNotifyOnlyKey = 'sb_prefs_appNotifyOnly';
 
   static Future<void> load() async {
     _biometricsEnabled = await getBiometricsEnabled();
@@ -17,6 +19,8 @@ abstract class AppSettings {
     _autolockTime = await getAutolockTime();
     _themeMode = await getThemeMode();
     _locale = await getLocale();
+    _notificationsEnabled = await getNotificationsEnabled();
+    _onlyAppNotifications = await getOnlyAppNotifications();
   }
 
   static Future<bool> getBiometricsEnabled() async =>
@@ -55,15 +59,29 @@ abstract class AppSettings {
     await _prefs.setStringList(_localeKey, [language, country]);
   }
 
+  static Future<bool> getNotificationsEnabled() async =>
+      await _prefs.getBool(_notificationsKey) ?? false;
+  static Future<void> setNotificationsEnabled(bool value) async =>
+      _prefs.setBool(_notificationsKey, value);
+
+  static Future<bool> getOnlyAppNotifications() async =>
+      await _prefs.getBool(_appNotifyOnlyKey) ?? false;
+  static Future<void> setOnlyAppNotifications(bool value) async =>
+      _prefs.setBool(_appNotifyOnlyKey, value);
+
   static late bool _biometricsEnabled;
   static late bool _autolockEnabled;
   static late String? _autolockTime;
   static late ThemeMode _themeMode;
   static late Locale _locale;
+  static late bool _notificationsEnabled;
+  static late bool _onlyAppNotifications;
 
   static bool get biometricsEnabled => _biometricsEnabled;
   static bool get autolockEnabled => _autolockEnabled;
   static String? get autolockTime => _autolockTime;
   static ThemeMode get themeMode => _themeMode;
   static Locale get locale => _locale;
+  static bool get notificationsEnabled => _notificationsEnabled;
+  static bool get onlyAppNotifications => _onlyAppNotifications;
 }

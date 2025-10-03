@@ -15,6 +15,7 @@ class EditPasswordScreen extends BaseScreen<EditPasswordScreen> {
 }
 
 class _EditPasswordScreenState extends BaseScreenState<EditPasswordScreen> {
+  late final _strings = Strings.of(context);
   late PasswordItem _item;
   late TextEditingController _passwordCtrl;
 
@@ -59,11 +60,7 @@ class _EditPasswordScreenState extends BaseScreenState<EditPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.item == null
-              ? Strings.of(context).add
-              : Strings.of(context).edit,
-        ),
+        title: Text(widget.item == null ? _strings.add : _strings.edit),
       ),
       body: activityDetection(
         Padding(
@@ -75,20 +72,18 @@ class _EditPasswordScreenState extends BaseScreenState<EditPasswordScreen> {
               children: [
                 TextFormField(
                   initialValue: _item.url,
-                  onChanged: (url) => _item = _item.copyWith(url: url),
+                  onSaved: (url) => _item = _item.copyWith(url: url),
                   decoration: const InputDecoration(labelText: 'URL'),
                   keyboardType: TextInputType.url,
                 ),
                 SizedBox(height: 16),
                 TextFormField(
                   initialValue: _item.login,
-                  onChanged: (login) => _item = _item.copyWith(login: login),
-                  decoration: InputDecoration(
-                    labelText: Strings.of(context).login,
-                  ),
+                  onSaved: (login) => _item = _item.copyWith(login: login),
+                  decoration: InputDecoration(labelText: _strings.login),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return Strings.of(context).loginIsRequiredError;
+                      return _strings.loginIsRequiredError;
                     }
                     return null;
                   },
@@ -98,25 +93,20 @@ class _EditPasswordScreenState extends BaseScreenState<EditPasswordScreen> {
                 SizedBox(height: 16),
                 TextFormField(
                   initialValue: _item.description,
-                  onChanged: (value) =>
+                  onSaved: (value) =>
                       _item = _item.copyWith(description: value),
                   keyboardType: TextInputType.multiline,
-                  decoration: InputDecoration(
-                    labelText: Strings.of(context).description,
-                  ),
+                  decoration: InputDecoration(labelText: _strings.description),
                   maxLines: 2,
                   minLines: 1,
                 ),
                 SizedBox(height: 16.0),
                 TagsInput(
                   item: _item,
-                  onUpdate: (item) => setState(() => _item = item),
+                  onUpdate: <T>(item) => setState(() => _item = item),
                 ),
                 const Spacer(),
-                ElevatedButton(
-                  onPressed: _submit,
-                  child: Text(Strings.of(context).save),
-                ),
+                ElevatedButton(onPressed: _submit, child: Text(_strings.save)),
               ],
             ),
           ),

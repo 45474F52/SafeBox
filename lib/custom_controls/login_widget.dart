@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:safebox/services/helpers/snackbar_provider.dart';
 
 import '../l10n/strings.dart';
 import '../screen/home.dart';
@@ -8,7 +9,7 @@ import '../services/auth/login_attempt_manager.dart';
 import '../services/auth/master_password_manager.dart';
 import '../services/auth/verificator.dart';
 
-class LoginWidget extends StatefulWidget {
+final class LoginWidget extends StatefulWidget {
   final bool asDialogWindow;
   const LoginWidget({super.key, this.asDialogWindow = false});
 
@@ -17,6 +18,7 @@ class LoginWidget extends StatefulWidget {
 }
 
 class _LoginWidgetState extends State<LoginWidget> {
+  late final _strings = Strings.of(context);
   late final _biometricAuth = BiometricAuth();
   final _passCtrl = TextEditingController();
 
@@ -40,23 +42,20 @@ class _LoginWidgetState extends State<LoginWidget> {
   Widget build(BuildContext context) {
     return widget.asDialogWindow
         ? AlertDialog(
-            title: Text(Strings.of(context).login),
+            title: Text(_strings.login),
             content: TextField(
               controller: _passCtrl,
               obscureText: true,
               autofocus: true,
               enabled: !_isLoading,
               decoration: InputDecoration(
-                labelText: Strings.of(context).loginLabel,
+                labelText: _strings.loginLabel,
                 errorText: _error,
               ),
               onSubmitted: (_) => _submit(),
             ),
             actions: [
-              TextButton(
-                onPressed: _submit,
-                child: Text(Strings.of(context).signIn),
-              ),
+              TextButton(onPressed: _submit, child: Text(_strings.signIn)),
               if (_isBiometricAvailable)
                 IconButton(
                   onPressed: _handleBiometricLogin,
@@ -83,7 +82,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                       autofocus: true,
                       enabled: !_isLoading,
                       decoration: InputDecoration(
-                        labelText: Strings.of(context).loginLabel,
+                        labelText: _strings.loginLabel,
                         errorText: _error,
                       ),
                       onSubmitted: (_) => _submit(),
@@ -97,7 +96,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                             children: [
                               ElevatedButton(
                                 onPressed: _submit,
-                                child: Text(Strings.of(context).signIn),
+                                child: Text(_strings.signIn),
                               ),
                               if (_isBiometricAvailable)
                                 IconButton(
@@ -121,24 +120,21 @@ class _LoginWidgetState extends State<LoginWidget> {
 
   Future<void> _checkBiometricAvailability() async {
     try {
-      final isAvaildable = await _biometricAuth.isBiometricsAvailable();
-      setState(() {
-        _isBiometricAvailable = isAvaildable && AppSettings.biometricsEnabled;
-      });
+      if (AppSettings.biometricsEnabled) {
+        final isAvailable = await _biometricAuth.isBiometricsAvailable();
+        setState(() => _isBiometricAvailable = isAvailable);
+      }
     } catch (e) {
-      print(e.toString());
+      if (mounted) {
+        SnackBarProvider.provideException(context, e);
+      }
     }
   }
 
   Future<void> _handleBiometricLogin() async {
     if (!await LoginAttemptManager.canAttemptLogin()) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Strings.of(context).attempsErrorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackBarProvider.showError(context, _strings.attempsErrorMessage);
       }
       return;
     }
@@ -173,22 +169,12 @@ class _LoginWidgetState extends State<LoginWidget> {
         if (!canAttempt) {
           await _showLockoutMessage();
         } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(Strings.of(context).notAuthenticatedMessage),
-              backgroundColor: Colors.red,
-            ),
-          );
+          SnackBarProvider.showError(context, _strings.notAuthenticatedMessage);
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Strings.of(context).errorMsg(e)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackBarProvider.provideException(context, e);
       }
     } finally {
       setState(() {
@@ -206,15 +192,10 @@ class _LoginWidgetState extends State<LoginWidget> {
 
       if (mounted) {
         final text = remainingTime.inMinutes <= 0
-            ? '${remainingTime.inSeconds} ${Strings.of(context).secondsPrefix}'
-            : '${remainingTime.inMinutes} ${Strings.of(context).minutesPrefix}';
+            ? '${remainingTime.inSeconds} ${_strings.secondsPrefix}'
+            : '${remainingTime.inMinutes} ${_strings.minutesPrefix}';
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Strings.of(context).lockoutMessage(text)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackBarProvider.showWarning(context, _strings.lockoutMessage(text));
       }
     }
   }
@@ -222,12 +203,7 @@ class _LoginWidgetState extends State<LoginWidget> {
   Future<void> _submit() async {
     if (!await LoginAttemptManager.canAttemptLogin()) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(Strings.of(context).attempsErrorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackBarProvider.showError(context, _strings.attempsErrorMessage);
       }
       return;
     }
@@ -235,7 +211,7 @@ class _LoginWidgetState extends State<LoginWidget> {
     String password = _passCtrl.text.trim();
     if (password.isEmpty) {
       setState(() {
-        _error = Strings.of(context).loginTitle;
+        _error = _strings.loginTitle;
       });
       return;
     }
@@ -278,11 +254,13 @@ class _LoginWidgetState extends State<LoginWidget> {
           await _showLockoutMessage();
         }
         setState(() {
-          _error = Strings.of(context).invalidPasswordError;
+          _error = _strings.invalidPasswordError;
         });
       }
     } catch (e) {
-      print(e.toString());
+      if (mounted) {
+        SnackBarProvider.provideException(context, e);
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -296,17 +274,14 @@ class _LoginWidgetState extends State<LoginWidget> {
       builder: (context) {
         final controller = TextEditingController();
         return AlertDialog(
-          title: Text(Strings.of(context).loginTitle),
+          title: Text(_strings.loginTitle),
           content: TextField(controller: controller, obscureText: true),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(Strings.of(context).cancel),
+              child: Text(_strings.cancel),
             ),
-            TextButton(
-              onPressed: _submit,
-              child: Text(Strings.of(context).apply),
-            ),
+            TextButton(onPressed: _submit, child: Text(_strings.apply)),
           ],
         );
       },

@@ -22,6 +22,7 @@
     "secondsPrefix": "сек.",
     "piecesPrefix": "шт.",
     "errorMsg": "Ошибка: {message}",
+    "notInCaseError": "State \"{state}\" not supported",
     "loginTitle": "Введите мастер-пароль",
     "loginLabel": "Мастер-пароль",
     "signIn": "Войти",
@@ -33,11 +34,13 @@
     "initMsg": "Инициализация...",
     "initError": "Ошибка инициализации",
     "passwordsTab": "Пароли",
+    "bankCardsTab": "Карты",
     "generatorTab": "Генератор",
     "settingsTab": "Настройки",
     "othersCategory": "Другие",
     "removeQuestion": "Удалить?",
     "removePasswordQuestion": "Удалить пароль для {url}?",
+    "removeBankCardQuestion": "Удалить карту {number}?",
     "filters": "Фильтры",
     "showAll": "Показать все",
     "enterSearchQuery": "Введите поисковый запрос",
@@ -74,7 +77,7 @@
     "developer": "Разработчик",
     "license": "Лицензия",
     "clearAllQuestion": "⚠️ Очистить всё?",
-    "clearAllQuestionDescription": "Все сохранённые пароли будут безвозвратно удалены. Вы уверены?",
+    "clearAllQuestionDescription": "Все сохранённые данные будут безвозвратно удалены. Вы уверены?",
     "allDataCleared": "✅ Все данные очищены",
     "enterPassword": "Введите пароль",
     "showPassword": "Показать пароль",
@@ -108,5 +111,6 @@
     "themeSettings": "Тема приложения",
     "themeSystem": "Системная",
     "themeLight": "Светлая",
-    "themeDark": "Тёмная"
+    "themeDark": "Тёмная",
+    "savedToMessage": "Файл сохранён в {path}"
 }

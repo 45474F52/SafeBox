@@ -28,16 +28,25 @@
             "message": {}
         }
     },
+    "notInCaseError": "State \"{state}\" not supported",
+    "@notInCaseError": {
+        "description": "Enter unnecessary state",
+        "placeholders": {
+            "state": {}
+        }
+    },
     "loginTitle": "Enter master-password",
     "loginLabel": "Master-password",
     "signIn": "Sign In",
     "attempsErrorMessage": "Too many failed attempts",
     "notAuthenticatedMessage": "Couldn't confirm identity",
-    "lockoutMessage": "Fccess is blocked for {message}",
+    "lockoutMessage": "Access is blocked for {message}",
     "@lockoutMessage": {
         "description": "Enter lockout duration",
         "placeholders": {
-            "message": {}
+            "message": {
+                "type": "String"
+            }
         }
     },
     "invalidPasswordError": "Invalid master password",
@@ -45,6 +54,7 @@
     "initMsg": "Initialization...",
     "initError": "Initialization error",
     "passwordsTab": "Passwords",
+    "bankCardsTab": "Bank cards",
     "generatorTab": "Generator",
     "settingsTab": "Settings",
     "othersCategory": "Others",
@@ -53,7 +63,18 @@
     "@removePasswordQuestion": {
         "description": "Enter url",
         "placeholders": {
-            "url": {}
+            "url": {
+                "type": "String"
+            }
+        }
+    },
+    "removeBankCardQuestion": "Delete card {number}?",
+    "@removeBankCardQuestion": {
+        "description": "Enter card number",
+        "placeholders": {
+            "number": {
+                "type": "String"
+            }
         }
     },
     "filters": "Filters",
@@ -92,7 +113,7 @@
     "developer": "Developer",
     "license": "License",
     "clearAllQuestion": "⚠️ Clear all?",
-    "clearAllQuestionDescription": "All saved passwords will be permanently deleted. Are you sure?",
+    "clearAllQuestionDescription": "All saved data will be permanently deleted. Are you sure?",
     "allDataCleared": "✅ All data cleared",
     "enterPassword": "Enter password",
     "showPassword": "Show password",
@@ -109,7 +130,9 @@
     "@selectedFileMessage": {
         "description": "Enter selected file path",
         "placeholders": {
-            "file": {}
+            "file": {
+                "type": "String"
+            }
         }
     },
     "securityStatsTitle": "Password Security Statistics",
@@ -118,8 +141,12 @@
     "@statsSummaryMessage": {
         "description": "Enter total count of passwords and count of weak passwords",
         "placeholders": {
-            "totalCount": {},
-            "weakCount": {}
+            "totalCount": {
+                "type": "int"
+            },
+            "weakCount": {
+                "type": "int"
+            }
         }
     },
     "veryWeakLevelText": "Extremely unreliable password.\nYou need to increase the length and add special characters",
@@ -133,7 +160,9 @@
     "@discoveredCountMessage": {
         "description": "Enter discovered count",
         "placeholders": {
-            "count": {}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "devicesNotFoundMsg": "Devices not found",
@@ -141,7 +170,9 @@
     "@startSyncWith": {
         "description": "Enter device IP to sync with",
         "placeholders": {
-            "device": {}
+            "device": {
+                "type": "String"
+            }
         }
     },
     "passwordsSynchronized": "Passwords was synchronized",
@@ -151,5 +182,14 @@
     "themeSettings": "App theme",
     "themeSystem": "System",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "savedToMessage": "File saved to {path}",
+    "@savedToMessage": {
+        "description": "Enter file path",
+        "placeholders": {
+            "path": {
+                "type": "String"
+            }
+        }
+    }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../l10n/strings.dart';
 import '../custom_controls/base_screen.dart';
-import '../services/passwords_strength/password_security_checker.dart';
-import '../services/passwords_strength/strength_level.dart';
+import '../services/passwords/strength/password_security_checker.dart';
+import '../services/passwords/strength/strength_level.dart';
 import '../services/security/password_storage.dart';
 import '../models/password_item.dart';
 
@@ -17,6 +17,7 @@ class PasswordSecurityScreen extends BaseScreen<PasswordSecurityScreen> {
 
 class _PasswordSecurityScreenState
     extends BaseScreenState<PasswordSecurityScreen> {
+  late final _strings = Strings.of(context);
   late Future<List<PasswordItem>> _futurePasswords;
   int _totalCount = 0;
   int _weakCount = 0;
@@ -40,7 +41,7 @@ class _PasswordSecurityScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(Strings.of(context).securityStatsTitle)),
+      appBar: AppBar(title: Text(_strings.securityStatsTitle)),
       body: activityDetection(
         FutureBuilder(
           future: _futurePasswords,
@@ -49,12 +50,10 @@ class _PasswordSecurityScreenState
               return Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Center(
-                child: Text(Strings.of(context).errorMsg(snapshot.error!)),
-              );
+              return Center(child: Text(_strings.errorMsg(snapshot.error!)));
             }
             if (!snapshot.hasData) {
-              return Center(child: Text(Strings.of(context).noDataError));
+              return Center(child: Text(_strings.noDataError));
             }
             final passwords = snapshot.data!;
 
@@ -155,15 +154,15 @@ class _PasswordSecurityScreenState
   String _getTextFromStrength(StrengthLevel strength) {
     switch (strength) {
       case StrengthLevel.veryWeak:
-        return Strings.of(context).veryWeakLevelText;
+        return _strings.veryWeakLevelText;
       case StrengthLevel.weak:
-        return Strings.of(context).weakLevelText;
+        return _strings.weakLevelText;
       case StrengthLevel.moderate:
-        return Strings.of(context).moderateLevelText;
+        return _strings.moderateLevelText;
       case StrengthLevel.strong:
-        return Strings.of(context).strongLevelText;
+        return _strings.strongLevelText;
       case StrengthLevel.veryStrong:
-        return Strings.of(context).veryStrongLevelText;
+        return _strings.veryStrongLevelText;
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -18,10 +19,10 @@ void main() async {
 
   await AppSettings.load();
 
-  runApp(SafeBoxApp());
+  runApp(const SafeBoxApp());
 }
 
-class SafeBoxApp extends StatelessWidget {
+final class SafeBoxApp extends StatelessWidget {
   const SafeBoxApp({super.key});
 
   @override
@@ -45,7 +46,7 @@ class SafeBoxApp extends StatelessWidget {
             theme: ThemeData.light(useMaterial3: true),
             darkTheme: ThemeData.dark(useMaterial3: true),
             home: const LoginWidget(),
-            debugShowCheckedModeBanner: false,
+            debugShowCheckedModeBanner: kDebugMode,
           );
         },
       ),

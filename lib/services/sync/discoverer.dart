@@ -24,7 +24,7 @@ class Discoverer {
 
     final myIP = await NetworkHelper.getLocalIP();
     if (myIP == null) {
-      throw 'Не удалось обнаружить локальный IP';
+      throw 'Не удалось обнаружить локальный IP (${NetworkHelper.lastError})';
     }
 
     final List<String> broadcastAddress = _getBroadcastAddress(myIP);

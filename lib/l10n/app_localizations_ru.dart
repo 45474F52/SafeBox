@@ -77,6 +77,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String notInCaseError(Object state) {
+    return 'State \"$state\" not supported';
+  }
+
+  @override
   String get loginTitle => 'Введите мастер-пароль';
 
   @override
@@ -92,7 +97,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notAuthenticatedMessage => 'Не удалось подтвердить личность';
 
   @override
-  String lockoutMessage(Object message) {
+  String lockoutMessage(String message) {
     return 'Доступ заблокирован на $message';
   }
 
@@ -112,6 +117,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get passwordsTab => 'Пароли';
 
   @override
+  String get bankCardsTab => 'Карты';
+
+  @override
   String get generatorTab => 'Генератор';
 
   @override
@@ -124,8 +132,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get removeQuestion => 'Удалить?';
 
   @override
-  String removePasswordQuestion(Object url) {
+  String removePasswordQuestion(String url) {
     return 'Удалить пароль для $url?';
+  }
+
+  @override
+  String removeBankCardQuestion(String number) {
+    return 'Удалить карту $number?';
   }
 
   @override
@@ -238,7 +251,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get clearAllQuestionDescription =>
-      'Все сохранённые пароли будут безвозвратно удалены. Вы уверены?';
+      'Все сохранённые данные будут безвозвратно удалены. Вы уверены?';
 
   @override
   String get allDataCleared => '✅ Все данные очищены';
@@ -277,7 +290,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importPasswords => 'Импортировать пароли';
 
   @override
-  String selectedFileMessage(Object file) {
+  String selectedFileMessage(String file) {
     return 'Выбран файл: $file';
   }
 
@@ -288,7 +301,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noDataError => 'Нет данных';
 
   @override
-  String statsSummaryMessage(Object totalCount, Object weakCount) {
+  String statsSummaryMessage(int totalCount, int weakCount) {
     return 'Проанализировано паролей $totalCount\nНенадёжных паролей: $weakCount';
   }
 
@@ -318,7 +331,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchMsg => 'Поиск...';
 
   @override
-  String discoveredCountMessage(Object count) {
+  String discoveredCountMessage(int count) {
     return 'Найдено устройств: $count';
   }
 
@@ -326,7 +339,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devicesNotFoundMsg => 'Устройства не обнаружены';
 
   @override
-  String startSyncWith(Object device) {
+  String startSyncWith(String device) {
     return 'Начать синхронизацию с $device';
   }
 
@@ -353,4 +366,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get themeDark => 'Тёмная';
+
+  @override
+  String savedToMessage(String path) {
+    return 'Файл сохранён в $path';
+  }
 }

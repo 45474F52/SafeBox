@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:safebox/services/helpers/snackbar_provider.dart';
 import '../l10n/strings.dart';
 import '../services/passwords/password_generator.dart';
 
@@ -13,6 +14,7 @@ class PasswordFormField extends StatefulWidget {
 }
 
 class _PasswordFormFieldState extends State<PasswordFormField> {
+  late final _strings = Strings.of(context);
   final _passGen = PasswordGenerator();
   late final TextEditingController _controller;
   bool _isObscured = true;
@@ -37,8 +39,8 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
       controller: _controller,
       obscureText: _isObscured,
       decoration: InputDecoration(
-        labelText: Strings.of(context).password,
-        hintText: Strings.of(context).enterPassword,
+        labelText: _strings.password,
+        hintText: _strings.enterPassword,
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -47,7 +49,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
               onPressed: () {
                 _generatePassword();
               },
-              tooltip: Strings.of(context).generate,
+              tooltip: _strings.generate,
             ),
 
             IconButton(
@@ -58,46 +60,40 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
                 });
               },
               tooltip: _isObscured
-                  ? Strings.of(context).showPassword
-                  : Strings.of(context).hidePassword,
+                  ? _strings.showPassword
+                  : _strings.hidePassword,
             ),
 
             IconButton(
               icon: const Icon(Icons.content_copy),
               onPressed: () async {
                 if (_controller.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(Strings.of(context).emptyFieldError),
-                      duration: Duration(seconds: 1),
-                    ),
+                  SnackBarProvider.showWarning(
+                    context,
+                    _strings.emptyFieldError,
                   );
                   return;
                 }
 
-                final messenger = ScaffoldMessenger.of(context);
-
                 await Clipboard.setData(ClipboardData(text: _controller.text));
 
                 if (context.mounted) {
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(Strings.of(context).passwordCopied),
-                      duration: Duration(seconds: 2),
-                    ),
+                  SnackBarProvider.showSuccess(
+                    context,
+                    _strings.passwordCopied,
                   );
                 }
 
                 FocusManager.instance.primaryFocus?.unfocus();
               },
-              tooltip: Strings.of(context).copy,
+              tooltip: _strings.copy,
             ),
           ],
         ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return Strings.of(context).enterPassword;
+          return _strings.enterPassword;
         }
         return null;
       },
@@ -108,13 +104,7 @@ class _PasswordFormFieldState extends State<PasswordFormField> {
     try {
       _controller.text = _passGen.generate();
     } on ArgumentError {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(Strings.of(context).selectLeastOneCharError),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.yellow,
-        ),
-      );
+      SnackBarProvider.showWarning(context, _strings.selectLeastOneCharError);
     }
   }
 }

@@ -77,6 +77,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notInCaseError(Object state) {
+    return 'State \"$state\" not supported';
+  }
+
+  @override
   String get loginTitle => 'Enter master-password';
 
   @override
@@ -92,8 +97,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notAuthenticatedMessage => 'Couldn\'t confirm identity';
 
   @override
-  String lockoutMessage(Object message) {
-    return 'Fccess is blocked for $message';
+  String lockoutMessage(String message) {
+    return 'Access is blocked for $message';
   }
 
   @override
@@ -112,6 +117,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordsTab => 'Passwords';
 
   @override
+  String get bankCardsTab => 'Bank cards';
+
+  @override
   String get generatorTab => 'Generator';
 
   @override
@@ -124,8 +132,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeQuestion => 'Delete?';
 
   @override
-  String removePasswordQuestion(Object url) {
+  String removePasswordQuestion(String url) {
     return 'Delete password for $url?';
+  }
+
+  @override
+  String removeBankCardQuestion(String number) {
+    return 'Delete card $number?';
   }
 
   @override
@@ -238,7 +251,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearAllQuestionDescription =>
-      'All saved passwords will be permanently deleted. Are you sure?';
+      'All saved data will be permanently deleted. Are you sure?';
 
   @override
   String get allDataCleared => '✅ All data cleared';
@@ -277,7 +290,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importPasswords => 'Import passwords';
 
   @override
-  String selectedFileMessage(Object file) {
+  String selectedFileMessage(String file) {
     return 'File is selected: $file';
   }
 
@@ -288,7 +301,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noDataError => 'No data';
 
   @override
-  String statsSummaryMessage(Object totalCount, Object weakCount) {
+  String statsSummaryMessage(int totalCount, int weakCount) {
     return 'Passwords analyzed $totalCount\nNon-secure passwords: $weakCount';
   }
 
@@ -319,7 +332,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchMsg => 'Discover...';
 
   @override
-  String discoveredCountMessage(Object count) {
+  String discoveredCountMessage(int count) {
     return 'Devices found: $count';
   }
 
@@ -327,7 +340,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devicesNotFoundMsg => 'Devices not found';
 
   @override
-  String startSyncWith(Object device) {
+  String startSyncWith(String device) {
     return 'Start synchronization with $device';
   }
 
@@ -354,4 +367,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeDark => 'Dark';
+
+  @override
+  String savedToMessage(String path) {
+    return 'File saved to $path';
+  }
 }
