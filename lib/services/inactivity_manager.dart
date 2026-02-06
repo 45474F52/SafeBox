@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../custom_controls/login_widget.dart';
+import 'package:safebox/services/app_settings.dart';
+import 'package:safebox/custom_controls/login_widget.dart';
 
 class InactivityManagerSingleton {
   static final InactivityManagerSingleton _instance =
@@ -61,7 +62,9 @@ class InactivityManagerSingleton {
 
   void _lockApp() {
     if (_context != null && _isEnabled) {
-      _showMasterPasswordDialog(_context!);
+      if (AppSettings.autolockEnabled) {
+        _showMasterPasswordDialog(_context!);
+      }
     }
   }
 

@@ -191,5 +191,27 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "syncConfirmDialogTitle": "Synchronization request",
+    "syncConfirmDialogQuestion": "Perform two-way synchronization?",
+    "syncConfirmDialogTimer": "Time left: {time} {prefix}",
+    "@syncConfirmDialogTimer": {
+        "description": "Enter time and time prefix",
+        "placeholders": {
+            "time": {
+                "type": "int"
+            },
+            "prefix": {
+                "type": "String"
+            }
+        }
+    },
+    "syncConfirmDialogCancel": "Only send",
+    "syncConfirmDialogAccept": "Two-way sync",
+    "notificationsSettingsTitle": "Notifications",
+    "notificationsSettingsEnable": "Enable notifications",
+    "notificationTitle": "Update passwords",
+    "notificationMessage": "Check your passwords to update them",
+    "notificationChannelDescription": "SafeBox notifications channel",
+    "inAppNotificationMessage": "Passwords need to be updated"
 }

@@ -119,15 +119,18 @@ class _PasswordGeneratorTabState extends State<PasswordGeneratorTab> {
             const SizedBox(height: 8),
             Card(
               elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: SelectableText(
-                  _generatedPassword,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 16,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w500,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 150),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: SelectableText(
+                    _generatedPassword,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 16,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),

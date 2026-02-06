@@ -64,7 +64,7 @@ class Discoverer {
       try {
         _socket!.send(data, InternetAddress(broadcast), port);
       } catch (e) {
-        throw 'Ошибка отправки на $broadcast: $e';
+        throw 'Error send to $broadcast: $e';
       }
     }
 

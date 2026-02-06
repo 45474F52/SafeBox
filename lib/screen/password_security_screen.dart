@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import '../l10n/strings.dart';
-import '../custom_controls/base_screen.dart';
-import '../services/passwords/strength/password_security_checker.dart';
-import '../services/passwords/strength/strength_level.dart';
-import '../services/security/password_storage.dart';
-import '../models/password_item.dart';
+import 'package:safebox/screen/edit_password_screen.dart';
+import 'package:safebox/l10n/strings.dart';
+import 'package:safebox/custom_controls/base_screen.dart';
+import 'package:safebox/services/passwords/strength/password_security_checker.dart';
+import 'package:safebox/services/passwords/strength/strength_level.dart';
+import 'package:safebox/services/storage/passwords_storage.dart';
+import 'package:safebox/models/password_item.dart';
 
 class PasswordSecurityScreen extends BaseScreen<PasswordSecurityScreen> {
-  final PasswordStorage storage;
+  final PasswordsStorage storage;
 
   const PasswordSecurityScreen({super.key, required this.storage});
 
@@ -22,20 +23,22 @@ class _PasswordSecurityScreenState
   int _totalCount = 0;
   int _weakCount = 0;
 
+  Future<void> _refresh() async {
+    setState(() {
+      _futurePasswords = widget.storage.loadActive().then((passwords) {
+        _totalCount = passwords.length;
+        _weakCount = passwords
+            .where((item) => PasswordSecurityChecker.isWeak(item.password))
+            .length;
+        return passwords;
+      });
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    _futurePasswords = widget.storage.loadActive().then((passwords) {
-      setState(() {
-        _totalCount = passwords.length;
-        _weakCount = passwords.where((item) {
-          final strength = PasswordSecurityChecker.check(item.password);
-          return strength == StrengthLevel.veryWeak ||
-              strength == StrengthLevel.weak;
-        }).length;
-      });
-      return passwords;
-    });
+    _refresh();
   }
 
   @override
@@ -64,33 +67,42 @@ class _PasswordSecurityScreenState
                     itemCount: passwords.length,
                     itemBuilder: (context, index) {
                       final item = passwords[index];
-                      final strength = PasswordSecurityChecker.check(
+                      final result = PasswordSecurityChecker.check(
                         item.password,
                       );
 
-                      final color = _getColorFromStrength(strength);
-                      final text = _getTextFromStrength(strength);
-                      final progress = _getProgressFromStrength(strength);
+                      final text = _getTextFromStrength(result.strengthLevel);
 
                       return ListTile(
                         title: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              item.url,
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _hideWithMask(item.login),
+                                  style: TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 8.0),
+                                Text(
+                                  '(${item.url})',
+                                  style: TextStyle(
+                                    fontSize: 14.0,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ),
                             SizedBox(height: 4.0),
                             Text(
-                              item.password.length >= 6
-                                  ? '${item.password.substring(0, 3)}****${item.password.substring(item.password.length - 3)}'
-                                  : '****',
+                              _hideWithMask(item.password),
                               style: TextStyle(
                                 fontSize: 14.0,
-                                color: const Color.fromARGB(255, 116, 116, 116),
+                                color: Colors.grey[600],
                               ),
                             ),
                           ],
@@ -99,18 +111,37 @@ class _PasswordSecurityScreenState
                           children: [
                             Expanded(
                               child: LinearProgressIndicator(
-                                value: progress,
+                                value: result.progress,
                                 backgroundColor: Colors.grey,
-                                valueColor: AlwaysStoppedAnimation(color),
+                                valueColor: AlwaysStoppedAnimation(
+                                  result.color,
+                                ),
                               ),
                             ),
                             SizedBox(width: 16.0),
                             Text(
                               text,
-                              style: TextStyle(fontSize: 14.0, color: color),
+                              style: TextStyle(
+                                fontSize: 14.0,
+                                color: result.color,
+                              ),
                             ),
                           ],
                         ),
+                        onTap: () async {
+                          final updated = await Navigator.push<PasswordItem>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditPasswordScreen(item: item),
+                            ),
+                          );
+
+                          if (updated != null) {
+                            await widget.storage.updateItem(updated);
+                            _refresh();
+                          }
+                        },
                       );
                     },
                     separatorBuilder: (_, _) => Divider(),
@@ -122,10 +153,7 @@ class _PasswordSecurityScreenState
                     Strings.of(
                       context,
                     ).statsSummaryMessage(_totalCount, _weakCount),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: const Color.fromARGB(255, 116, 116, 116),
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ),
               ],
@@ -134,21 +162,6 @@ class _PasswordSecurityScreenState
         ),
       ),
     );
-  }
-
-  static Color _getColorFromStrength(StrengthLevel strength) {
-    switch (strength) {
-      case StrengthLevel.veryWeak:
-        return Colors.red;
-      case StrengthLevel.weak:
-        return Colors.orange;
-      case StrengthLevel.moderate:
-        return Colors.yellow;
-      case StrengthLevel.strong:
-        return Colors.green;
-      case StrengthLevel.veryStrong:
-        return const Color.fromARGB(255, 50, 126, 52);
-    }
   }
 
   String _getTextFromStrength(StrengthLevel strength) {
@@ -166,18 +179,14 @@ class _PasswordSecurityScreenState
     }
   }
 
-  static double _getProgressFromStrength(StrengthLevel strength) {
-    switch (strength) {
-      case StrengthLevel.veryWeak:
-        return 0.1;
-      case StrengthLevel.weak:
-        return 0.3;
-      case StrengthLevel.moderate:
-        return 0.5;
-      case StrengthLevel.strong:
-        return 0.8;
-      case StrengthLevel.veryStrong:
-        return 1.0;
+  String _hideWithMask(String text) {
+    final mask = '****';
+    if (text.length >= 6) {
+      final prefix = text.substring(0, 3);
+      final suffix = text.substring(text.length - 3);
+      return '$prefix$mask$suffix';
+    } else {
+      return mask;
     }
   }
 }

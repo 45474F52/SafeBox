@@ -1,17 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:safebox/l10n/strings.dart';
 import 'package:safebox/services/app_settings.dart';
 import 'package:safebox/services/notifications/inapp_notifications_manager.dart';
-import 'package:safebox/services/notifications/system_notifications_service.dart';
-import 'package:safebox/services/security/bank_card_storage.dart';
+import 'package:safebox/services/storage/bank_cards_storage.dart';
 import 'package:safebox/tabs/bank_cards.dart';
-import '../custom_controls/base_screen.dart';
-import '../services/sync/background_worker.dart';
-import '../services/sync/synchronizer.dart';
-import '../tabs/passwords.dart';
-import '../tabs/pass_gen.dart';
-import '../tabs/settings.dart';
-import '../services/security/password_storage.dart';
+import 'package:safebox/custom_controls/base_screen.dart';
+import 'package:safebox/services/sync/background_worker.dart';
+import 'package:safebox/services/sync/synchronizer.dart';
+import 'package:safebox/tabs/passwords.dart';
+import 'package:safebox/tabs/pass_gen.dart';
+import 'package:safebox/tabs/settings.dart';
+import 'package:safebox/services/storage/passwords_storage.dart';
 
 class HomeScreen extends BaseScreen<HomeScreen> {
   final String master;
@@ -37,9 +38,9 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
     super.initState();
 
     _initFuture = Future.wait([
-      PasswordStorage.create(widget.master),
-      BankCardStorage.create(widget.master),
-      Synchronizer.create(widget.master),
+      PasswordsStorage.create(widget.master),
+      BankCardsStorage.create(widget.master),
+      Synchronizer.create(widget.master, _confirmationDialog),
     ], eagerError: true);
 
     BackgroundWorker.startAnnouncing();
@@ -88,17 +89,11 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
             );
           }
 
-          final passwordsStorage = snapshot.data![0] as PasswordStorage;
-          final cardsStorage = snapshot.data![1] as BankCardStorage;
+          final passwordsStorage = snapshot.data![0] as PasswordsStorage;
+          final cardsStorage = snapshot.data![1] as BankCardsStorage;
           final synchronizer = snapshot.data![2] as Synchronizer;
 
           if (AppSettings.notificationsEnabled) {
-            if (!AppSettings.onlyAppNotifications) {
-              SystemNotificationsService.scheduleDailyNotification(
-                passwordsStorage,
-              );
-            }
-
             passwordsStorage.loadActive().then((value) async {
               if (await passwordsStorage.needUpdateAny()) {
                 if (context.mounted) {
@@ -124,7 +119,7 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
                   BankCardsTab(storage: cardsStorage),
                   SettingsTab(
                     passwordStorage: passwordsStorage,
-                    cardStorage: cardsStorage,
+                    cardsStorage: cardsStorage,
                     synchronizer: synchronizer,
                   ),
                 ],
@@ -134,5 +129,60 @@ class _HomeScreenState extends BaseScreenState<HomeScreen> {
         },
       ),
     );
+  }
+
+  Future<bool> _confirmationDialog() async {
+    bool? result;
+    Timer? timer;
+    int remainingTime = 15;
+
+    final dialog = showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(_strings.syncConfirmDialogTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_strings.syncConfirmDialogQuestion),
+            const SizedBox(height: 8.0),
+            Text(
+              _strings.syncConfirmDialogTimer(
+                remainingTime,
+                _strings.secondsPrefix,
+              ),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(_strings.syncConfirmDialogCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(_strings.syncConfirmDialogAccept),
+          ),
+        ],
+      ),
+    );
+
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (remainingTime > 0) {
+        setState(() {
+          remainingTime--;
+        });
+      } else {
+        timer.cancel();
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop(false);
+        }
+      }
+    });
+
+    result = await dialog;
+    timer.cancel();
+
+    return result ?? false;
   }
 }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../l10n/strings.dart';
-import '../models/password_item.dart';
-import '../screen/password_security_screen.dart';
-import '../services/security/password_storage.dart';
-import '../screen/edit_password_screen.dart';
+import 'package:safebox/l10n/strings.dart';
+import 'package:safebox/models/password_item.dart';
+import 'package:safebox/screen/edit_password_screen.dart';
+import 'package:safebox/screen/password_security_screen.dart';
+import 'package:safebox/services/storage/passwords_storage.dart';
 
 class PasswordsTab extends StatefulWidget {
-  final PasswordStorage storage;
+  final PasswordsStorage storage;
 
   const PasswordsTab({super.key, required this.storage});
 

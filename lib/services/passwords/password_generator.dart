@@ -1,6 +1,6 @@
 import 'dart:math';
 
-class PasswordGenerator {
+final class PasswordGenerator {
   static const minLength = 8;
   static const maxLength = 32;
   static const _defaultLength = 12;

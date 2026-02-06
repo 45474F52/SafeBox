@@ -371,4 +371,40 @@ class AppLocalizationsRu extends AppLocalizations {
   String savedToMessage(String path) {
     return 'Файл сохранён в $path';
   }
+
+  @override
+  String get syncConfirmDialogTitle => 'Запрос на синхронизацию';
+
+  @override
+  String get syncConfirmDialogQuestion =>
+      'Выполнить двустороннюю синхронизацию?';
+
+  @override
+  String syncConfirmDialogTimer(int time, String prefix) {
+    return 'Осталось времени: $time $prefix';
+  }
+
+  @override
+  String get syncConfirmDialogCancel => 'Только отправить';
+
+  @override
+  String get syncConfirmDialogAccept => 'Двусторонняя синхронизация';
+
+  @override
+  String get notificationsSettingsTitle => 'Уведомления';
+
+  @override
+  String get notificationsSettingsEnable => 'Включить уведомления';
+
+  @override
+  String get notificationTitle => 'Обновите пароли';
+
+  @override
+  String get notificationMessage => 'Проверьте свои пароли, чтобы обновить их';
+
+  @override
+  String get notificationChannelDescription => 'Канал уведомлений SafeBox';
+
+  @override
+  String get inAppNotificationMessage => 'Нужно обновить пароли';
 }

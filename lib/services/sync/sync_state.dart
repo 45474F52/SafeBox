@@ -1,1 +1,8 @@
-enum WaitingFor { sync, publicKey, dataWithKey, finish }
+enum WaitingFor {
+  sync,
+  publicKey,
+  confirmation,
+  requestData,
+  dataWithKey,
+  finish,
+}

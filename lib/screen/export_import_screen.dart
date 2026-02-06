@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:safebox/services/helpers/snackbar_provider.dart';
-import '../l10n/strings.dart';
-import '../custom_controls/base_screen.dart';
-import '../services/export_import_passwords/yandex_entries_converter.dart';
-import '../services/export_import_passwords/yandex_exporter_importer.dart';
-import '../services/security/password_storage.dart';
+import 'package:safebox/l10n/strings.dart';
+import 'package:safebox/custom_controls/base_screen.dart';
+import 'package:safebox/services/export_import_passwords/yandex_entries_converter.dart';
+import 'package:safebox/services/export_import_passwords/yandex_exporter_importer.dart';
+import 'package:safebox/services/storage/passwords_storage.dart';
 
 class ExportImportScreen extends BaseScreen<ExportImportScreen> {
-  final PasswordStorage storage;
+  final PasswordsStorage storage;
 
   const ExportImportScreen({super.key, required this.storage});
 

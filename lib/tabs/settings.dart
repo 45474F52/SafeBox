@@ -1,34 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:safebox/custom_controls/settings_item.dart';
+import 'package:safebox/custom_controls/login_widget.dart';
+import 'package:safebox/l10n/app_locales.dart';
+import 'package:safebox/l10n/locale_provider.dart';
+import 'package:safebox/l10n/strings.dart';
+import 'package:safebox/models/lock_option.dart';
+import 'package:safebox/screen/sync_screen.dart';
+import 'package:safebox/screen/export_import_screen.dart';
 import 'package:safebox/services/helpers/snackbar_provider.dart';
-import 'package:safebox/services/notifications/system_notifications_service.dart';
-import '../l10n/locale_provider.dart';
-import '../l10n/strings.dart';
-import '../services/security/bank_card_storage.dart';
-import '../services/theme_provider.dart';
-import '../custom_controls/login_widget.dart';
-import '../l10n/app_locales.dart';
-import '../models/lock_option.dart';
-import '../screen/export_import_screen.dart';
-import '../screen/sync_screen.dart';
-import '../services/app_settings.dart';
-import '../services/auth/master_password_manager.dart';
-import '../services/inactivity_manager.dart';
-import '../services/security/password_storage.dart';
-import '../services/auth/verificator.dart';
-import '../services/sync/synchronizer.dart';
-import '../services/helpers/locale_helper.dart';
+import 'package:safebox/services/storage/bank_cards_storage.dart';
+import 'package:safebox/services/theme_provider.dart';
+import 'package:safebox/services/app_settings.dart';
+import 'package:safebox/services/auth/master_password_manager.dart';
+import 'package:safebox/services/inactivity_manager.dart';
+import 'package:safebox/services/storage/passwords_storage.dart';
+import 'package:safebox/services/auth/verificator.dart';
+import 'package:safebox/services/sync/synchronizer.dart';
+import 'package:safebox/services/helpers/locale_helper.dart';
 
 class SettingsTab extends StatefulWidget {
-  final PasswordStorage passwordStorage;
-  final BankCardStorage cardStorage;
+  final PasswordsStorage passwordStorage;
+  final BankCardsStorage cardsStorage;
   final Synchronizer synchronizer;
 
   const SettingsTab({
     super.key,
     required this.passwordStorage,
-    required this.cardStorage,
+    required this.cardsStorage,
     required this.synchronizer,
   });
 
@@ -38,9 +37,9 @@ class SettingsTab extends StatefulWidget {
 
 class _SettingsTabState extends State<SettingsTab> {
   static final List<LockOption> _lockOptions = [
-    LockOption.fromMinutes(Duration(minutes: 5)),
-    LockOption.fromMinutes(Duration(minutes: 25)),
-    LockOption.fromMinutes(Duration(minutes: 60)),
+    LockOption.fromMinutes(5),
+    LockOption.fromMinutes(25),
+    LockOption.fromMinutes(60),
   ];
   static final _defLockOption = _lockOptions.first;
 
@@ -57,7 +56,6 @@ class _SettingsTabState extends State<SettingsTab> {
   bool _autoLockEnabled = false;
   LockOption _autoLockTime = _defLockOption;
   bool _notificationsEnabled = false;
-  bool _onlyAppNotifications = false;
 
   @override
   void initState() {
@@ -83,7 +81,6 @@ class _SettingsTabState extends State<SettingsTab> {
     final autolockEnabled = AppSettings.autolockEnabled;
     final autolockTime = AppSettings.autolockTime;
     final notificationsEnabled = AppSettings.notificationsEnabled;
-    final onlyAppNotifications = AppSettings.onlyAppNotifications;
     _localeProvider.locale = AppSettings.locale;
     _themeProvider.theme = AppSettings.themeMode;
 
@@ -94,7 +91,6 @@ class _SettingsTabState extends State<SettingsTab> {
           ? LockOption.parse(autolockTime!)
           : LockOption.nullObject();
       _notificationsEnabled = notificationsEnabled;
-      _onlyAppNotifications = onlyAppNotifications;
       InactivityManagerSingleton().setDuration(_autoLockTime.duration);
     });
   }
@@ -278,40 +274,18 @@ class _SettingsTabState extends State<SettingsTab> {
             ],
           ),
 
-          // TODO: add translate
           SettingsItem(
             titleIcon: Icons.notifications,
-            titleText: 'Notifications',
+            titleText: _strings.notificationsSettingsTitle,
             children: [
               SwitchListTile(
-                title: Text('Notifications'),
-                subtitle: Text('Enable notifications'),
+                title: Text(_strings.notificationsSettingsTitle),
+                subtitle: Text(_strings.notificationsSettingsEnable),
                 value: _notificationsEnabled,
                 onChanged: (value) async {
                   setState(() => _notificationsEnabled = value);
                   await AppSettings.setNotificationsEnabled(value);
-                  await SystemNotificationsService.cancelAll();
-                  if (_notificationsEnabled) {
-                    await SystemNotificationsService.scheduleDailyNotification(
-                      widget.passwordStorage,
-                    );
-                  }
                 },
-              ),
-              Visibility(
-                visible: _notificationsEnabled,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
-                  child: SwitchListTile(
-                    title: Text('App notifications'),
-                    subtitle: Text('Use app notifications only'),
-                    value: _onlyAppNotifications,
-                    onChanged: (value) async {
-                      setState(() => _onlyAppNotifications = value);
-                      await AppSettings.setOnlyAppNotifications(value);
-                    },
-                  ),
-                ),
               ),
             ],
           ),
@@ -352,7 +326,7 @@ class _SettingsTabState extends State<SettingsTab> {
             onPressed: () async {
               Navigator.pop(ctx);
               await widget.passwordStorage.clear();
-              await widget.cardStorage.clear();
+              await widget.cardsStorage.clear();
               await _verificator.removeToken();
               await MasterPasswordManager.delete();
               if (mounted) {

@@ -5,11 +5,11 @@ class LockOption {
 
   const LockOption._(this._duration);
 
-  factory LockOption.fromMinutes(Duration duration) {
-    if (duration.inMinutes > 0) {
-      return LockOption._(duration);
+  factory LockOption.fromMinutes(int minutes) {
+    if (minutes > 0) {
+      return LockOption._(Duration(minutes: minutes));
     }
-    throw ArgumentError.value(duration);
+    throw ArgumentError.value(minutes);
   }
 
   factory LockOption.nullObject() => LockOption._(Duration.zero);
@@ -17,7 +17,7 @@ class LockOption {
   factory LockOption.parse(String value) {
     final minutes = int.tryParse(value);
     if (minutes != null) {
-      return LockOption.fromMinutes(Duration(minutes: minutes));
+      return LockOption.fromMinutes(minutes);
     }
     throw ArgumentError.value(value);
   }

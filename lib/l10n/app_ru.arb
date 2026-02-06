@@ -112,5 +112,16 @@
     "themeSystem": "Системная",
     "themeLight": "Светлая",
     "themeDark": "Тёмная",
-    "savedToMessage": "Файл сохранён в {path}"
+    "savedToMessage": "Файл сохранён в {path}",
+    "syncConfirmDialogTitle": "Запрос на синхронизацию",
+    "syncConfirmDialogQuestion": "Выполнить двустороннюю синхронизацию?",
+    "syncConfirmDialogTimer": "Осталось времени: {time} {prefix}",
+    "syncConfirmDialogCancel": "Только отправить",
+    "syncConfirmDialogAccept": "Двусторонняя синхронизация",
+    "notificationsSettingsTitle": "Уведомления",
+    "notificationsSettingsEnable": "Включить уведомления",
+    "notificationTitle": "Обновите пароли",
+    "notificationMessage": "Проверьте свои пароли, чтобы обновить их",
+    "notificationChannelDescription": "Канал уведомлений SafeBox",
+    "inAppNotificationMessage": "Нужно обновить пароли"
 }

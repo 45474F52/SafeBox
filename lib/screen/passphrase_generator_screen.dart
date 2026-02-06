@@ -178,16 +178,19 @@ class _PassphraseGeneratorScreenState
               const SizedBox(height: 8.0),
 
               Card(
-                elevation: 2.0,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: SelectableText(
-                    _generatedPhrase,
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 16.0,
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.w500,
+                elevation: 2,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 150),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: SelectableText(
+                      _generatedPhrase,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 16,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),

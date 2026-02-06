@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:safebox/l10n/strings.dart';
 import 'package:safebox/custom_controls/base_screen.dart';
 import 'package:safebox/custom_controls/tags_input.dart';
-import 'package:safebox/l10n/strings.dart';
 import 'package:safebox/models/bank_card.dart';
 
 class EditBankCardScreen extends BaseScreen<EditBankCardScreen> {
@@ -65,7 +65,7 @@ class _EditBankCardScreenState extends BaseScreenState<EditBankCardScreen> {
                 TextFormField(
                   initialValue: _item.number,
                   onSaved: (number) => _item = _item.copyWith(number: number),
-                  decoration: const InputDecoration(labelText: 'Номер карты'),
+                  decoration: const InputDecoration(labelText: 'Номер карты'), // TODO: translate
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 16.0),

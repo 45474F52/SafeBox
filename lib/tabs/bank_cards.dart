@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:safebox/l10n/strings.dart';
 import 'package:safebox/models/bank_card.dart';
-import 'package:safebox/services/security/bank_card_storage.dart';
-
-import '../screen/edit_bank_card_screen.dart';
+import 'package:safebox/screen/edit_item_screen.dart';
+import 'package:safebox/services/storage/bank_cards_storage.dart';
+import 'package:safebox/screen/edit_bank_card_screen.dart';
 
 class BankCardsTab extends StatefulWidget {
-  final BankCardStorage storage;
+  final BankCardsStorage storage;
 
   const BankCardsTab({super.key, required this.storage});
 
@@ -42,10 +42,33 @@ class _BankCardsTabState extends State<BankCardsTab> {
     }
   }
 
-  void _editItem(BankCard item) async {
+  void _editItem(BankCard card) async {
+    final route = EditItemScreen(
+      item: card,
+      getNullObject: BankCard.nullObject,
+      saveItem: (item) => BankCard(
+        id: card.id,
+        number: item.number,
+        validityPeriod: item.validityPeriod,
+        owner: item.owner,
+        title: item.title,
+        description: item.description,
+        tags: item.tags,
+      ),
+      includeTags: true,
+      fields: [
+        TextFormField(
+          initialValue: card.number,
+          onSaved: (number) => card = card.copyWith(number: number),
+          decoration: const InputDecoration(labelText: 'Card number'),
+          keyboardType: TextInputType.number
+        )
+      ],
+    );
+
     final updated = await Navigator.push<BankCard>(
       context,
-      MaterialPageRoute(builder: (context) => EditBankCardScreen(item: item)),
+      MaterialPageRoute(builder: (context) => route),
     );
 
     if (updated != null) {
@@ -118,7 +141,7 @@ class _BankCardsTabState extends State<BankCardsTab> {
                     children: [
                       ListTile(
                         leading: SizedBox(
-                          width: 120, // оптимальная ширина
+                          width: 120,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,

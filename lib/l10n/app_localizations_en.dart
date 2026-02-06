@@ -372,4 +372,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String savedToMessage(String path) {
     return 'File saved to $path';
   }
+
+  @override
+  String get syncConfirmDialogTitle => 'Synchronization request';
+
+  @override
+  String get syncConfirmDialogQuestion => 'Perform two-way synchronization?';
+
+  @override
+  String syncConfirmDialogTimer(int time, String prefix) {
+    return 'Time left: $time $prefix';
+  }
+
+  @override
+  String get syncConfirmDialogCancel => 'Only send';
+
+  @override
+  String get syncConfirmDialogAccept => 'Two-way sync';
+
+  @override
+  String get notificationsSettingsTitle => 'Notifications';
+
+  @override
+  String get notificationsSettingsEnable => 'Enable notifications';
+
+  @override
+  String get notificationTitle => 'Update passwords';
+
+  @override
+  String get notificationMessage => 'Check your passwords to update them';
+
+  @override
+  String get notificationChannelDescription => 'SafeBox notifications channel';
+
+  @override
+  String get inAppNotificationMessage => 'Passwords need to be updated';
 }

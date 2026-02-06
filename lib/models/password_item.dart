@@ -1,16 +1,17 @@
 // ignore_for_file: unnecessary_this
 
-import 'package:safebox/models/i_synchronizable.dart';
-import 'package:safebox/models/taggable_item.dart';
+import 'package:safebox/services/storage/storable_item.dart';
 import 'package:uuid/uuid.dart';
 
-class PasswordItem extends TaggableItem implements ISynchronizable {
+class PasswordItem extends StorableItem<PasswordItem> {
+  @override
   final String id;
   final String login;
   final String password;
   final String url;
   final String description;
   final DateTime updatedAt;
+  @override
   final DateTime? deletedAt;
 
   PasswordItem._(
@@ -40,7 +41,7 @@ class PasswordItem extends TaggableItem implements ISynchronizable {
        this.updatedAt = updatedAt ?? DateTime.now(),
        super(tags);
 
-  factory PasswordItem.fromJSON(Map<String, dynamic> json) {
+  factory PasswordItem.fromJson(Map<String, dynamic> json) {
     return PasswordItem(
       id: json['id'] as String,
       login: json['login'] as String,
@@ -55,7 +56,8 @@ class PasswordItem extends TaggableItem implements ISynchronizable {
     );
   }
 
-  Map<String, dynamic> toJSON() {
+  @override
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'login': login,
@@ -68,6 +70,7 @@ class PasswordItem extends TaggableItem implements ISynchronizable {
     };
   }
 
+  @override
   PasswordItem copyWith({
     String? id,
     String? login,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../l10n/strings.dart';
-import '../custom_controls/base_screen.dart';
-import '../custom_controls/password_form_field.dart';
-import '../custom_controls/tags_input.dart';
-import '../models/password_item.dart';
+import 'package:safebox/l10n/strings.dart';
+import 'package:safebox/custom_controls/base_screen.dart';
+import 'package:safebox/custom_controls/tags_input.dart';
+import 'package:safebox/models/password_item.dart';
+import 'package:safebox/custom_controls/password_form_field.dart';
 
 class EditPasswordScreen extends BaseScreen<EditPasswordScreen> {
   final PasswordItem? item;

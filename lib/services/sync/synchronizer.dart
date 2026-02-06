@@ -3,22 +3,30 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:safebox/models/exceptions/not_in_case_exception.dart';
+import 'package:safebox/services/helpers/path_helper.dart';
+import 'package:safebox/services/log/logger.dart';
 
-import '../../models/bank_card.dart';
-import '../../models/password_item.dart';
-import '../security/bank_card_storage.dart';
-import '../security/crypto_manager.dart';
-import '../security/password_storage.dart';
+import 'package:safebox/models/exceptions/not_in_case_exception.dart';
+import 'package:safebox/models/bank_card.dart';
+import 'package:safebox/models/password_item.dart';
+import 'package:safebox/services/storage/bank_cards_storage.dart';
+import 'package:safebox/services/security/crypto_manager.dart';
+import 'package:safebox/services/storage/passwords_storage.dart';
+import 'items_converter.dart';
 import 'items_merger.dart';
 import 'message.dart';
 import 'sync_state.dart';
 
+// TODO: testing
 final class Synchronizer {
-  static const int port = 1409;
+  static const port = 1409;
+  static const _remoteFileName = 'rmt_sbdf.enc';
 
-  late final PasswordStorage _passwordStorage;
-  late final BankCardStorage _cardStorage;
+  static final _logger = Logger("Synchronizer");
+
+  late final PasswordsStorage _passwordStorage;
+  late final BankCardsStorage _cardStorage;
+  late final Future<bool> Function() _confirmationDialog;
 
   late final File _remoteData;
 
@@ -26,21 +34,32 @@ final class Synchronizer {
 
   late final Future<void> _serverStarted;
 
-  static Future<Synchronizer> create(String master) async {
-    final storage = await PasswordStorage.create(master);
-    final cardsStorage = await BankCardStorage.create(master);
-    final synchronizer = Synchronizer._(storage, cardsStorage);
+  static Future<Synchronizer> create(
+    String master,
+    Future<bool> Function() confirmationDialog,
+  ) async {
+    final storage = await PasswordsStorage.create(master);
+    final cardsStorage = await BankCardsStorage.create(master);
+    final synchronizer = Synchronizer._(
+      storage,
+      cardsStorage,
+      confirmationDialog,
+    );
     await synchronizer._serverStarted;
     return synchronizer;
   }
 
-  Synchronizer._(this._passwordStorage, this._cardStorage) {
+  Synchronizer._(
+    this._passwordStorage,
+    this._cardStorage,
+    this._confirmationDialog,
+  ) {
     final parentDir = _passwordStorage.fileDir;
     if (!parentDir.existsSync()) {
       parentDir.createSync(recursive: true);
     }
 
-    _remoteData = File('${parentDir.path}/rmt_sbdf.enc');
+    _remoteData = File(PathHelper.combine(parentDir.path, _remoteFileName));
 
     if (!_remoteData.existsSync()) {
       _remoteData.createSync();
@@ -57,71 +76,47 @@ final class Synchronizer {
       shared: true,
     );
 
+    bool confirm = false;
+
     server.listen((client) {
       final buffer = StringBuffer();
       var state = WaitingFor.sync;
 
       client.listen(
-        (data) {
+        (data) async {
           final text = String.fromCharCodes(data);
           buffer.write(text);
 
           if (text.contains(Platform.lineTerminator)) {
-            final message = Message(buffer.toString().trim());
+            final message = Message.parse(buffer.toString().trim());
             buffer.clear();
 
             try {
               switch (state) {
                 case WaitingFor.sync:
                   if (message.isStartSync) {
-                    client.writeln(
-                      Message.sendPublicKey(_cryptoManager.publicKey),
-                    );
-                    client.flush();
+                    await _sendPublicKeyTo(client);
                     state = WaitingFor.publicKey;
                   }
                   break;
                 case WaitingFor.publicKey:
                   if (message.containPublicKey) {
                     _cryptoManager.remotePublicKey = message.publicKey!;
-                    final loadPasswords = _passwordStorage.load();
-                    final loadCards = _cardStorage.load();
-                    Future.wait([loadPasswords, loadCards]).then((data) {
-                      final passwords = data[0] as List<PasswordItem>;
-                      final cards = data[1] as List<BankCard>;
 
-                      final passwordsBytes = _itemsToBytes(
-                        passwords,
-                        (item) => item.toJSON(),
-                      );
-                      final cardsBytes = _itemsToBytes(
-                        cards,
-                        (item) => item.toJSON(),
-                      );
+                    confirm = await _confirmationDialog();
 
-                      final metadata = Uint8List(1)
-                        ..insert(0, passwordsBytes.length);
-                      final dataBytes = Uint8List.fromList(metadata)
-                        ..addAll(passwordsBytes)
-                        ..addAll(cardsBytes);
-                      final encryptedData = _cryptoManager.encryptData(
-                        dataBytes,
-                      );
+                    client.writeln(Message.responseConfirmation(confirm));
+                    client.flush();
 
-                      final encryptedTempKey = _cryptoManager.encryptTempKey(
-                        base64Decode(_cryptoManager.remotePublicKey!),
-                      );
-
-                      client.writeln(
-                        Message.sendDataWithKey(
-                          encryptedData,
-                          encryptedTempKey,
-                        ),
-                      );
-                      client.flush();
-
-                      state = WaitingFor.dataWithKey;
-                    });
+                    state = WaitingFor.requestData;
+                  }
+                  break;
+                case WaitingFor.requestData:
+                  if (message.containDataRequest) {
+                    await _sendDataTo(client);
+                    state = confirm
+                        ? WaitingFor.dataWithKey
+                        : WaitingFor.finish;
                   }
                   break;
                 case WaitingFor.dataWithKey:
@@ -131,17 +126,20 @@ final class Synchronizer {
                     _saveRemoteData(base64Decode(data));
                     _cryptoManager.decryptRemoteTempKey(base64Decode(key));
 
-                    client.writeln(Message.finishSync);
-                    client.flush();
+                    await _finishSyncWith(client);
                     state = WaitingFor.finish;
                   }
                   break;
                 case WaitingFor.finish:
                   if (message.isFinishSync) {
                     client.close();
-                    _syncFile();
+                    if (confirm) {
+                      _syncFile();
+                    }
                     break;
                   }
+                default:
+                  throw NotInCaseException(state);
               }
             } catch (e) {
               client.close();
@@ -161,7 +159,7 @@ final class Synchronizer {
   }
 
   Future<void> initiateSyncWith(String ip) async {
-    Socket? socket;
+    late Socket socket;
     try {
       socket = await Socket.connect(ip, port, timeout: Duration(seconds: 8));
 
@@ -172,13 +170,15 @@ final class Synchronizer {
       socket.writeln(Message.startSync);
       await socket.flush();
 
+      bool confirm = false;
+
       socket.listen(
         (data) async {
           final text = String.fromCharCodes(data);
           buffer.write(text);
 
           if (text.contains(Platform.lineTerminator)) {
-            final message = Message(buffer.toString().trim());
+            final message = Message.parse(buffer.toString().trim());
             buffer.clear();
 
             try {
@@ -186,9 +186,14 @@ final class Synchronizer {
                 case WaitingFor.publicKey:
                   if (message.containPublicKey) {
                     _cryptoManager.remotePublicKey = message.publicKey!;
-                    socket!.writeln(
-                      Message.sendPublicKey(_cryptoManager.publicKey),
-                    );
+                    await _sendPublicKeyTo(socket);
+                    state = WaitingFor.confirmation;
+                  }
+                  break;
+                case WaitingFor.confirmation:
+                  if (message.containConfirmation) {
+                    confirm = message.isConfirmed;
+                    socket.writeln(Message.requestData);
                     await socket.flush();
                     state = WaitingFor.dataWithKey;
                   }
@@ -200,54 +205,28 @@ final class Synchronizer {
                     await _saveRemoteData(base64Decode(data));
                     _cryptoManager.decryptRemoteTempKey(base64Decode(key));
 
-                    final passwords = await _passwordStorage.load();
-                    final cards = await _cardStorage.load();
-
-                    final passwordsBytes = _itemsToBytes(
-                      passwords,
-                      (item) => item.toJSON(),
-                    );
-                    final cardsBytes = _itemsToBytes(
-                      cards,
-                      (item) => item.toJSON(),
-                    );
-
-                    final metadata = Uint8List(1)
-                      ..insert(0, passwordsBytes.length);
-                    final dataBytes = Uint8List.fromList(metadata)
-                      ..addAll(passwordsBytes)
-                      ..addAll(cardsBytes);
-                    final encryptedData = _cryptoManager.encryptData(dataBytes);
-
-                    final encryptedTempKey = _cryptoManager.encryptTempKey(
-                      base64Decode(_cryptoManager.remotePublicKey!),
-                    );
-
-                    socket!.writeln(
-                      Message.sendDataWithKey(encryptedData, encryptedTempKey),
-                    );
-                    await socket.flush();
-
-                    state = WaitingFor.finish;
+                    if (confirm) {
+                      await _sendDataTo(socket);
+                      state = WaitingFor.finish;
+                    } else {
+                      await _handleFinishWith(socket, completer);
+                    }
                   }
                   break;
                 case WaitingFor.finish:
                   if (message.isFinishSync) {
-                    socket!.writeln(Message.finishSync);
-                    await socket.flush();
-
-                    await _syncFile();
-                    if (!completer.isCompleted) {
-                      completer.complete();
-                    }
+                    await _handleFinishWith(socket, completer);
                   }
                   break;
                 default:
                   throw NotInCaseException(state);
               }
             } catch (e) {
-              completer.completeError(e);
-              socket!.close();
+              if (!completer.isCompleted) {
+                completer.completeError(e);
+              }
+              socket.close();
+              _logger.error(e.toString());
               rethrow;
             }
           }
@@ -256,11 +235,11 @@ final class Synchronizer {
           if (!completer.isCompleted) {
             completer.complete();
           }
-          socket?.close();
+          socket.close();
         },
         onError: (e) {
           completer.completeError(e);
-          socket?.close();
+          socket.close();
           throw e;
         },
         cancelOnError: true,
@@ -270,7 +249,7 @@ final class Synchronizer {
     } catch (e) {
       rethrow;
     } finally {
-      socket?.destroy();
+      socket.destroy();
     }
   }
 
@@ -287,8 +266,11 @@ final class Synchronizer {
     final passwordsBytes = decrypted.buffer.asUint8List(1, 1 + metadata);
     final cardsBytes = decrypted.buffer.asUint8List(1 + metadata);
 
-    final passwords = _bytesToItems(passwordsBytes, PasswordItem.fromJSON);
-    final cards = _bytesToItems(cardsBytes, BankCard.fromJSON);
+    final passwords = ItemsConverter.bytesToItems(
+      passwordsBytes,
+      PasswordItem.fromJson,
+    );
+    final cards = ItemsConverter.bytesToItems(cardsBytes, BankCard.fromJson);
 
     return (passwords, cards);
   }
@@ -308,23 +290,50 @@ final class Synchronizer {
     await _remoteData.delete();
   }
 
-  static Uint8List _itemsToBytes<T>(
-    List<T> items,
-    Map<String, dynamic> Function(T) toJSON,
-  ) {
-    final jsonList = jsonEncode(items.map((item) => toJSON(item)).toList());
-    return Uint8List.fromList(utf8.encode(jsonList));
+  Future<void> _sendPublicKeyTo(Socket consumer) async {
+    consumer.writeln(Message.sendPublicKey(_cryptoManager.publicKey));
+    await consumer.flush();
   }
 
-  static List<T> _bytesToItems<T>(
-    Uint8List bytes,
-    T Function(Map<String, dynamic>) fromJSON,
-  ) {
-    if (bytes.isNotEmpty) {
-      final jsonString = utf8.decode(bytes);
-      final jsonList = jsonDecode(jsonString) as List;
-      return jsonList.map((json) => fromJSON(json)).toList();
+  Future<void> _sendDataTo(Socket consumer) async {
+    final passwords = await _passwordStorage.load();
+    final cards = await _cardStorage.load();
+
+    final passwordsBytes = ItemsConverter.itemsToBytes(
+      passwords,
+      (item) => item.toJson(),
+    );
+    final cardsBytes = ItemsConverter.itemsToBytes(
+      cards,
+      (item) => item.toJson(),
+    );
+
+    final metadata = [passwordsBytes.length];
+    final dataBytes = Uint8List.fromList([
+      ...metadata,
+      ...passwordsBytes,
+      ...cardsBytes,
+    ]);
+
+    final encryptedData = _cryptoManager.encryptData(dataBytes);
+    final encryptedTempKey = _cryptoManager.encryptTempKey(
+      base64Decode(_cryptoManager.remotePublicKey!),
+    );
+
+    consumer.writeln(Message.sendDataWithKey(encryptedData, encryptedTempKey));
+    consumer.flush();
+  }
+
+  Future<void> _finishSyncWith(Socket consumer) async {
+    consumer.writeln(Message.finishSync);
+    await consumer.flush();
+  }
+
+  Future<void> _handleFinishWith(Socket consumer, Completer completer) async {
+    await _finishSyncWith(consumer);
+    await _syncFile();
+    if (!completer.isCompleted) {
+      completer.complete();
     }
-    return [];
   }
 }

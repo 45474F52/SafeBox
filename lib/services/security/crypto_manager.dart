@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -49,27 +48,25 @@ class CryptoManager {
   }
 
   Uint8List encryptData(Uint8List data) {
-    return data.isEmpty
-        ? data
-        : Uint8List.fromList(
-            utf8
-                .decode(data)
-                .split('')
-                .map((char) => char.codeUnitAt(0) ^ _tempKey.length)
-                .toList(),
-          );
+    if (data.isNotEmpty) {
+      final encrypted = Uint8List(data.length);
+      for (int i = 0; i < data.length; i++) {
+        encrypted[i] = data[i] ^ _tempKey.length;
+      }
+      return encrypted;
+    }
+    return data;
   }
 
   Uint8List decryptData(Uint8List data) {
-    return data.isEmpty
-        ? data
-        : Uint8List.fromList(
-            utf8
-                .decode(data)
-                .split('')
-                .map((char) => char.codeUnitAt(0) ^ _remoteTempKey!.length)
-                .toList(),
-          );
+    if (data.isNotEmpty) {
+      final decrypted = Uint8List(data.length);
+      for (int i = 0; i < data.length; i++) {
+        decrypted[i] = data[i] ^ _remoteTempKey!.length;
+      }
+      return decrypted;
+    }
+    return data;
   }
 
   Uint8List get publicKey => Uint8List.fromList(_publicKey.codeUnits);

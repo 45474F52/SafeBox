@@ -1,10 +1,10 @@
 // ignore_for_file: unnecessary_this
 
-import 'package:safebox/models/i_synchronizable.dart';
-import 'package:safebox/models/taggable_item.dart';
+import 'package:safebox/services/storage/storable_item.dart';
 import 'package:uuid/uuid.dart';
 
-class BankCard extends TaggableItem implements ISynchronizable {
+class BankCard extends StorableItem<BankCard> {
+  @override
   final String id;
   final String number;
   final DateTime validityPeriod;
@@ -12,6 +12,7 @@ class BankCard extends TaggableItem implements ISynchronizable {
   final String title;
   final String description;
   final DateTime updatedAt;
+  @override
   final DateTime? deletedAt;
 
   BankCard._(
@@ -43,7 +44,7 @@ class BankCard extends TaggableItem implements ISynchronizable {
        this.updatedAt = updatedAt ?? DateTime.now(),
        super(tags);
 
-  factory BankCard.fromJSON(Map<String, dynamic> json) {
+  factory BankCard.fromJson(Map<String, dynamic> json) {
     return BankCard(
       id: json['id'],
       number: json['number'],
@@ -57,7 +58,8 @@ class BankCard extends TaggableItem implements ISynchronizable {
     );
   }
 
-  Map<String, dynamic> toJSON() {
+  @override
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'number': number,
@@ -71,6 +73,7 @@ class BankCard extends TaggableItem implements ISynchronizable {
     };
   }
 
+  @override
   BankCard copyWith({
     String? id,
     String? number,

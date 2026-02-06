@@ -775,6 +775,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'File saved to {path}'**
   String savedToMessage(String path);
+
+  /// No description provided for @syncConfirmDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization request'**
+  String get syncConfirmDialogTitle;
+
+  /// No description provided for @syncConfirmDialogQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Perform two-way synchronization?'**
+  String get syncConfirmDialogQuestion;
+
+  /// Enter time and time prefix
+  ///
+  /// In en, this message translates to:
+  /// **'Time left: {time} {prefix}'**
+  String syncConfirmDialogTimer(int time, String prefix);
+
+  /// No description provided for @syncConfirmDialogCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Only send'**
+  String get syncConfirmDialogCancel;
+
+  /// No description provided for @syncConfirmDialogAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-way sync'**
+  String get syncConfirmDialogAccept;
+
+  /// No description provided for @notificationsSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsSettingsTitle;
+
+  /// No description provided for @notificationsSettingsEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications'**
+  String get notificationsSettingsEnable;
+
+  /// No description provided for @notificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update passwords'**
+  String get notificationTitle;
+
+  /// No description provided for @notificationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your passwords to update them'**
+  String get notificationMessage;
+
+  /// No description provided for @notificationChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'SafeBox notifications channel'**
+  String get notificationChannelDescription;
+
+  /// No description provided for @inAppNotificationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords need to be updated'**
+  String get inAppNotificationMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:safebox/l10n/locale_provider.dart';
 import 'package:safebox/l10n/strings.dart';
 import 'package:safebox/services/app_settings.dart';
+import 'package:safebox/services/passwords/strength/password_security_checker.dart';
 import 'package:safebox/services/theme_provider.dart';
 import 'custom_controls/login_widget.dart';
 import 'l10n/app_localizations.dart';
@@ -18,6 +19,7 @@ void main() async {
   ]);
 
   await AppSettings.load();
+  await PasswordSecurityChecker.init();
 
   runApp(const SafeBoxApp());
 }
